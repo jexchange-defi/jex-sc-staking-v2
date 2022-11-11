@@ -1,0 +1,167 @@
+{
+  "name": "init",
+  "steps": [
+    {
+      "step": "externalSteps",
+      "path": "steps/init_accounts.steps.json"
+    },
+    {
+      "step": "externalSteps",
+      "path": "steps/deploy_contract.steps.json"
+    },
+    {
+      "step": "setState",
+      "currentBlockInfo": {
+        "blockEpoch": "589"
+      }
+    },
+    {
+      "step": "scQuery",
+      "tx": {
+        "to": "sc:fees",
+        "function": "totalStakedAmount",
+        "arguments": []
+      },
+      "expect": {
+        "out": ["0"],
+        "status": "",
+        "logs": []
+      }
+    },
+    {
+      "step": "scQuery",
+      "tx": {
+        "to": "sc:fees",
+        "function": "currentStakingRound",
+        "arguments": []
+      },
+      "expect": {
+        "out": ["1"],
+        "status": "",
+        "logs": []
+      }
+    },
+    {
+      "step": "scQuery",
+      "tx": {
+        "to": "sc:fees",
+        "function": "nextRewardPeriod",
+        "arguments": []
+      },
+      "expect": {
+        "out": ["605"],
+        "status": "",
+        "logs": []
+      }
+    },
+    {
+      "step": "scQuery",
+      "tx": {
+        "to": "sc:fees",
+        "function": "nextAccumulationPeriod",
+        "arguments": []
+      },
+      "expect": {
+        "out": ["609"],
+        "status": "",
+        "logs": []
+      }
+    },
+    {
+      "step": "setState",
+      "currentBlockInfo": {
+        "blockEpoch": "756"
+      }
+    },
+    {
+      "step": "scQuery",
+      "tx": {
+        "to": "sc:fees",
+        "function": "currentStakingRound",
+        "arguments": []
+      },
+      "expect": {
+        "out": ["9"],
+        "status": "",
+        "logs": []
+      }
+    },
+    {
+      "step": "scQuery",
+      "tx": {
+        "to": "sc:fees",
+        "function": "nextRewardPeriod",
+        "arguments": []
+      },
+      "expect": {
+        "out": ["773"],
+        "status": "",
+        "logs": []
+      }
+    },
+    {
+      "step": "scQuery",
+      "tx": {
+        "to": "sc:fees",
+        "function": "nextAccumulationPeriod",
+        "arguments": []
+      },
+      "expect": {
+        "out": ["777"],
+        "status": "",
+        "logs": []
+      }
+    },
+    {
+      "step": "scQuery",
+      "tx": {
+        "to": "sc:fees",
+        "function": "isActive",
+        "arguments": []
+      },
+      "expect": {
+        "out": ["0"],
+        "status": "",
+        "logs": []
+      }
+    },
+    {
+      "step": "setState",
+      "currentBlockInfo": {
+        "blockEpoch": "776"
+      }
+    },
+    {
+      "step": "scQuery",
+      "tx": {
+        "to": "sc:fees",
+        "function": "currentStakingRound",
+        "arguments": []
+      },
+      "expect": {
+        "out": ["9"],
+        "status": "",
+        "logs": []
+      }
+    },
+    {
+      "step": "setState",
+      "currentBlockInfo": {
+        "blockEpoch": "777"
+      }
+    },
+    {
+      "step": "scQuery",
+      "tx": {
+        "to": "sc:fees",
+        "function": "currentStakingRound",
+        "arguments": []
+      },
+      "expect": {
+        "out": ["10"],
+        "status": "",
+        "logs": []
+      }
+    }
+  ]
+}

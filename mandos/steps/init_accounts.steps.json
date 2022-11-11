@@ -1,0 +1,9 @@
+{
+  "name": "init accounts",
+  "steps": [
+    {
+      "step": "setState",
+      "accounts": {}
+    }
+  ]
+}
