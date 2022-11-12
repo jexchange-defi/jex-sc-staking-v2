@@ -10,9 +10,11 @@ elrond_wasm_node::wasm_endpoints! {
         configureToken
         getAllAddresses
         getCurrentRound
+        getRewardsForRound
         getSnapshotTotalBalance
         getTokenThresholds
         initRound
+        prepareRewards
         snapshot
     )
 }

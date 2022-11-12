@@ -1,5 +1,6 @@
 #![no_std]
 
+mod rewards;
 mod snapshots;
 mod tokens;
 
@@ -7,7 +8,9 @@ elrond_wasm::imports!();
 elrond_wasm::derive_imports!();
 
 #[elrond_wasm::derive::contract]
-pub trait ScStaking: snapshots::SnapshotsModule + tokens::TokensModule {
+pub trait ScStaking:
+    rewards::RewardsModule + snapshots::SnapshotsModule + tokens::TokensModule
+{
     #[only_owner]
     #[init]
     fn init(&self) {
@@ -24,6 +27,12 @@ pub trait ScStaking: snapshots::SnapshotsModule + tokens::TokensModule {
 
         self.reset_snapshots();
         self.enable_snapshots();
+    }
+    #[only_owner]
+    #[endpoint(prepareRewards)]
+    fn prepare_rewards(&self) {
+        let current_round = self.current_round().get();
+        self.prepare_rewards_internal(current_round);
     }
 
     #[view(getCurrentRound)]

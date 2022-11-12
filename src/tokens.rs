@@ -3,9 +3,9 @@ elrond_wasm::derive_imports!();
 
 #[derive(TopEncode, TopDecode, TypeAbi)]
 pub struct TokenAndThreshold<M: ManagedTypeApi> {
-    token: TokenIdentifier<M>,
-    nonce: u64,
-    threshold: BigUint<M>,
+    pub token: TokenIdentifier<M>,
+    pub nonce: u64,
+    pub threshold: BigUint<M>,
 }
 
 #[elrond_wasm::module]

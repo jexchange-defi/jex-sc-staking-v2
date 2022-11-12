@@ -85,7 +85,7 @@ Return the current staking round (integer)
 
 ## getCurrentState
 
-Return the current state of staking (Accumulation or Claim)
+Return the current state of staking (Accumulation or Distribution)
 
 ## getRewardsForRound
 
