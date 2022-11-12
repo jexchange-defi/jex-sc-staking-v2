@@ -2,12 +2,28 @@
   "name": "deploy contract",
   "steps": [
     {
+      "step": "setState",
+      "accounts": {
+        "address:owner": {
+          "nonce": "1",
+          "balance": "0"
+        }
+      },
+      "newAddresses": [
+        {
+          "creatorAddress": "address:owner",
+          "creatorNonce": "1",
+          "newAddress": "sc:staking"
+        }
+      ]
+    },
+    {
       "step": "scDeploy",
       "txId": "1",
       "tx": {
         "from": "address:owner",
         "contractCode": "file:../../output/jex-sc-staking-v2.wasm",
-        "arguments": ["str:JEX-abcdef"],
+        "arguments": [],
         "gasLimit": "5,000,000",
         "gasPrice": "0"
       },
@@ -22,7 +38,7 @@
     {
       "step": "checkState",
       "accounts": {
-        "sc:fees": {
+        "sc:staking": {
           "nonce": "0",
           "balance": "0",
           "code": "file:../../output/jex-sc-staking-v2.wasm",

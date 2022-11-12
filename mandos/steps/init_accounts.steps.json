@@ -3,7 +3,12 @@
   "steps": [
     {
       "step": "setState",
-      "accounts": {}
+      "accounts": {
+        "address:user1": {
+          "nonce": "0",
+          "balance": "0"
+        }
+      }
     }
   ]
 }
