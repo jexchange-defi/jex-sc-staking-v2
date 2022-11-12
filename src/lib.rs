@@ -12,6 +12,7 @@ pub trait ScStaking: snapshots::SnapshotsModule + tokens::TokensModule {
     #[init]
     fn init(&self) {
         self.current_round().set_if_empty(1);
+        self.enable_snapshots();
     }
 
     #[only_owner]
@@ -20,6 +21,9 @@ pub trait ScStaking: snapshots::SnapshotsModule + tokens::TokensModule {
         self.require_distribution_complete();
 
         self.current_round().update(|x| *x += 1);
+
+        self.reset_snapshots();
+        self.enable_snapshots();
     }
 
     #[view(getCurrentRound)]

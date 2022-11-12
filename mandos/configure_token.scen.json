@@ -32,6 +32,7 @@
           "code": "file:../output/jex-sc-staking-v2.wasm",
           "storage": {
             "str:current_round": "*",
+            "str:snapshots_enabled": "*",
             "str:token_thresholds.len": "1",
             "str:token_thresholds.item|u32:1": {
               "0-token-identifier": "nested:str:TOKEN-abcdef",

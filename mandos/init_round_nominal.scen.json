@@ -14,7 +14,8 @@
           "code": "file:../output/jex-sc-staking-v2.wasm",
           "owner": "address:owner",
           "storage": {
-            "str:current_round": "6"
+            "str:current_round": "6",
+            "str:snapshot_total_balance": "999,000000000000000000"
           }
         }
       }
@@ -45,7 +46,9 @@
           "balance": "0",
           "code": "file:../output/jex-sc-staking-v2.wasm",
           "storage": {
-            "str:current_round": "7"
+            "str:current_round": "7",
+            "str:snapshot_total_balance": "0",
+            "str:snapshots_enabled": "*"
           }
         },
         "+": ""

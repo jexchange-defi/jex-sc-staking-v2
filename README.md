@@ -45,6 +45,8 @@ Fail if snapshots are present.
 
 Add a list of addresses + their snapshot balance.
 
+Fail if in not in accumulation period.
+
 Parameters:
 
 * List of Address + balance
@@ -99,15 +101,15 @@ Parameters:
 
 u32
 
-## total_snapshot
+## total_snapshot_balance
 
 BigUint
 
 ## tokens
 
-VecMapper of TokenAndBalance
+VecMapper of TokenAndThreshold
 
-TokenAndBalance {
+TokenAndThreshold {
     token: TokenIdentifer;
     threshold: BigUint;
 }
@@ -123,3 +125,8 @@ UnorderedSet of ManagedAddress
 ## rewards_for_round
 
 SingleValueMapper: int -> ManagedVec<TokenAndBalance>
+
+TokenAndBalance {
+    token: TokenIdentifer;
+    balance: BigUint;
+}
