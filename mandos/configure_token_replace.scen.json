@@ -1,5 +1,5 @@
 {
-  "name": "configure_token (replace)",
+  "name": "configureToken (replace)",
   "steps": [
     {
       "step": "externalSteps",
@@ -51,7 +51,7 @@
     },
     {
       "step": "scCall",
-      "txId": "configureTokenNominal",
+      "txId": "configureTokenReplace1",
       "tx": {
         "from": "address:owner",
         "to": "sc:staking",
@@ -113,7 +113,7 @@
     },
     {
       "step": "scCall",
-      "txId": "configureTokenNominal",
+      "txId": "configureTokenReplace2",
       "tx": {
         "from": "address:owner",
         "to": "sc:staking",
@@ -151,7 +151,7 @@
     },
     {
       "step": "scCall",
-      "txId": "configureTokenNominal",
+      "txId": "configureTokenReplace3",
       "tx": {
         "from": "address:owner",
         "to": "sc:staking",

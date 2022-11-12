@@ -42,7 +42,9 @@
           "nonce": "0",
           "balance": "0",
           "code": "file:../../output/jex-sc-staking-v2.wasm",
-          "storage": {}
+          "storage": {
+            "str:current_round": "1"
+          }
         },
         "+": ""
       }
