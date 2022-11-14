@@ -1,0 +1,67 @@
+{
+  "name": "fundRewards (already prepared)",
+  "steps": [
+    {
+      "step": "externalSteps",
+      "path": "configure.scen.json"
+    },
+    {
+      "step": "setState",
+      "accounts": {
+        "sc:staking": {
+          "nonce": "0",
+          "balance": "0",
+          "code": "file:../output/jex-sc-staking-v2.wasm",
+          "esdt": {
+            "str:JEX-abcdef": "5,000000000000000000"
+          },
+          "owner": "address:owner",
+          "storage": {
+            "str:current_round": "1",
+            "str:rewards_for_round|u32:1|str:.len": "5",
+            "str:team_a_address": "address:team_a",
+            "str:team_j_address": "address:team_j",
+            "str:team_p_address": "address:team_p",
+            "str:treasury_address": "address:treasury"
+          }
+        },
+        "address:user1": {
+          "nonce": "0",
+          "balance": "1,000,000,000,000,000,000",
+          "esdt": {
+            "str:JEX-abcdef": "1,000000000000000000",
+            "str:WEGLD-abcdef": "10,000000000000000000"
+          }
+        }
+      }
+    },
+    {
+      "step": "scCall",
+      "txId": "fundRewards",
+      "tx": {
+        "from": "address:user1",
+        "to": "sc:staking",
+        "function": "fundRewards",
+        "esdtValue": [
+          {
+            "tokenIdentifier": "str:JEX-abcdef",
+            "value": "1,000000000000000000"
+          },
+          {
+            "tokenIdentifier": "str:WEGLD-abcdef",
+            "value": "10,000000000000000000"
+          }
+        ],
+        "arguments": [],
+        "gasLimit": "6,000,000",
+        "gasPrice": "0"
+      },
+      "expect": {
+        "status": "4",
+        "message": "str:Rewards already prepared",
+        "gas": "*",
+        "refund": "*"
+      }
+    }
+  ]
+}

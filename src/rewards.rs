@@ -14,12 +14,49 @@ static DISTRIBUTION_ALREADY_COMPLETE: &[u8] = b"Distribution already complete";
 static REWARDS_ALREADY_PREPARED: &[u8] = b"Rewards already prepared";
 static REWARDS_NOT_PREPARED: &[u8] = b"Rewards are not prepared";
 
+static REWARD_TREASURY_PERCENT: u32 = 30;
+static REWARD_TEAM_A_PERCENT: u32 = 10;
+static REWARD_TEAM_J_PERCENT: u32 = 5;
+static REWARD_TEAM_P_PERCENT: u32 = 5;
+
 #[elrond_wasm::module]
 pub trait RewardsModule: crate::tokens::TokensModule + crate::snapshots::SnapshotsModule {
-    fn prepare_rewards_internal(&self, round: u32) {
-        let mut rewards = self.rewards_for_round(round);
-        require!(rewards.is_empty(), REWARDS_ALREADY_PREPARED);
+    fn fund_rewards_internal(&self, round: u32) {
+        self.require_rewards_not_prepared(round);
 
+        let payments = &self.call_value().all_esdt_transfers();
+        for payment in payments {
+            self.send().direct_esdt(
+                &self.treasury_address().get(),
+                &payment.token_identifier,
+                payment.token_nonce,
+                &(payment.amount.clone() * REWARD_TREASURY_PERCENT / 100u64),
+            );
+            self.send().direct_esdt(
+                &self.team_a_address().get(),
+                &payment.token_identifier,
+                payment.token_nonce,
+                &(payment.amount.clone() * REWARD_TEAM_A_PERCENT / 100u64),
+            );
+            self.send().direct_esdt(
+                &self.team_j_address().get(),
+                &payment.token_identifier,
+                payment.token_nonce,
+                &(payment.amount.clone() * REWARD_TEAM_J_PERCENT / 100u64),
+            );
+            self.send().direct_esdt(
+                &self.team_p_address().get(),
+                &payment.token_identifier,
+                payment.token_nonce,
+                &(payment.amount.clone() * REWARD_TEAM_P_PERCENT / 100u64),
+            );
+        }
+    }
+
+    fn prepare_rewards_internal(&self, round: u32) {
+        self.require_rewards_not_prepared(round);
+
+        let mut rewards = self.rewards_for_round(round);
         for token_and_threshold in self.token_thresholds().iter() {
             let sc_balance = self.blockchain().get_sc_balance(
                 &EgldOrEsdtTokenIdentifier::esdt(token_and_threshold.token.clone()),
@@ -38,8 +75,7 @@ pub trait RewardsModule: crate::tokens::TokensModule + crate::snapshots::Snapsho
     }
 
     fn distribute_rewards_internal(&self, round: u32, limit: usize) {
-        let rewards = self.rewards_for_round(round);
-        require!(!rewards.is_empty(), REWARDS_NOT_PREPARED);
+        self.require_rewards_prepared(round);
 
         require!(
             !self.all_addresses().is_empty(),
@@ -74,9 +110,31 @@ pub trait RewardsModule: crate::tokens::TokensModule + crate::snapshots::Snapsho
         }
     }
 
+    fn require_rewards_prepared(&self, round: u32) {
+        let rewards = self.rewards_for_round(round);
+        require!(!rewards.is_empty(), REWARDS_NOT_PREPARED);
+    }
+
+    fn require_rewards_not_prepared(&self, round: u32) {
+        let rewards = self.rewards_for_round(round);
+        require!(rewards.is_empty(), REWARDS_ALREADY_PREPARED);
+    }
+
     #[view(getRewardsForRound)]
     #[storage_mapper("rewards_for_round")]
     fn rewards_for_round(&self, round: u32) -> VecMapper<TokenAndBalance<Self::Api>>;
+
+    #[storage_mapper("treasury_address")]
+    fn treasury_address(&self) -> SingleValueMapper<ManagedAddress>;
+
+    #[storage_mapper("team_a_address")]
+    fn team_a_address(&self) -> SingleValueMapper<ManagedAddress>;
+
+    #[storage_mapper("team_j_address")]
+    fn team_j_address(&self) -> SingleValueMapper<ManagedAddress>;
+
+    #[storage_mapper("team_p_address")]
+    fn team_p_address(&self) -> SingleValueMapper<ManagedAddress>;
 
     #[event("rewards_distribution")]
     fn rewards_distribution_event(

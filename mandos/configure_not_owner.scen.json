@@ -1,0 +1,32 @@
+{
+  "name": "configure (not owner)",
+  "steps": [
+    {
+      "step": "externalSteps",
+      "path": "init.scen.json"
+    },
+    {
+      "step": "scCall",
+      "txId": "configureNotOwner",
+      "tx": {
+        "from": "address:user1",
+        "to": "sc:staking",
+        "function": "configure",
+        "arguments": [
+          "address:treasury",
+          "address:team_a",
+          "address:team_j",
+          "address:team_p"
+        ],
+        "gasLimit": "6,000,000",
+        "gasPrice": "0"
+      },
+      "expect": {
+        "status": "4",
+        "message": "str:Endpoint can only be called by owner",
+        "gas": "*",
+        "refund": "*"
+      }
+    }
+  ]
+}

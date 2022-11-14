@@ -1,0 +1,115 @@
+{
+  "name": "fundRewards",
+  "steps": [
+    {
+      "step": "externalSteps",
+      "path": "configure.scen.json"
+    },
+    {
+      "step": "setState",
+      "accounts": {
+        "sc:staking": {
+          "nonce": "0",
+          "balance": "0",
+          "code": "file:../output/jex-sc-staking-v2.wasm",
+          "esdt": {
+            "str:JEX-abcdef": "5,000000000000000000"
+          },
+          "owner": "address:owner",
+          "storage": {
+            "str:team_a_address": "address:team_a",
+            "str:team_j_address": "address:team_j",
+            "str:team_p_address": "address:team_p",
+            "str:treasury_address": "address:treasury"
+          }
+        },
+        "address:user1": {
+          "nonce": "0",
+          "balance": "1,000,000,000,000,000,000",
+          "esdt": {
+            "str:JEX-abcdef": "1,000000000000000000",
+            "str:WEGLD-abcdef": "10,000000000000000000"
+          }
+        }
+      }
+    },
+    {
+      "step": "scCall",
+      "txId": "fundRewards",
+      "tx": {
+        "from": "address:user1",
+        "to": "sc:staking",
+        "function": "fundRewards",
+        "esdtValue": [
+          {
+            "tokenIdentifier": "str:JEX-abcdef",
+            "value": "1,000000000000000000"
+          },
+          {
+            "tokenIdentifier": "str:WEGLD-abcdef",
+            "value": "10,000000000000000000"
+          }
+        ],
+        "arguments": [],
+        "gasLimit": "6,000,000",
+        "gasPrice": "0"
+      },
+      "expect": {
+        "status": "0",
+        "message": "",
+        "gas": "*",
+        "refund": "*"
+      }
+    },
+    {
+      "step": "checkState",
+      "accounts": {
+        "sc:staking": {
+          "nonce": "*",
+          "balance": "*",
+          "code": "file:../output/jex-sc-staking-v2.wasm",
+          "esdt": {
+            "str:JEX-abcdef": "5,500000000000000000",
+            "str:WEGLD-abcdef": "5,000000000000000000"
+          },
+          "storage": {
+            "+": "*"
+          }
+        },
+        "address:team_a": {
+          "nonce": "*",
+          "balance": "*",
+          "esdt": {
+            "str:JEX-abcdef": "0,100000000000000000",
+            "str:WEGLD-abcdef": "1,000000000000000000"
+          }
+        },
+        "address:team_j": {
+          "nonce": "*",
+          "balance": "*",
+          "esdt": {
+            "str:JEX-abcdef": "0,050000000000000000",
+            "str:WEGLD-abcdef": "0,500000000000000000"
+          }
+        },
+        "address:team_p": {
+          "nonce": "*",
+          "balance": "*",
+          "esdt": {
+            "str:JEX-abcdef": "0,050000000000000000",
+            "str:WEGLD-abcdef": "0,500000000000000000"
+          }
+        },
+        "address:treasury": {
+          "nonce": "*",
+          "balance": "*",
+          "esdt": {
+            "str:JEX-abcdef": "0,300000000000000000",
+            "str:WEGLD-abcdef": "3,000000000000000000"
+          }
+        },
+        "+": ""
+      }
+    }
+  ]
+}

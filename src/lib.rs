@@ -26,6 +26,21 @@ pub trait ScStaking:
     }
 
     #[only_owner]
+    #[endpoint]
+    fn configure(
+        &self,
+        treasury_address: ManagedAddress,
+        team_a_address: ManagedAddress,
+        team_j_address: ManagedAddress,
+        team_p_address: ManagedAddress,
+    ) {
+        self.treasury_address().set(treasury_address);
+        self.team_a_address().set(team_a_address);
+        self.team_j_address().set(team_j_address);
+        self.team_p_address().set(team_p_address);
+    }
+
+    #[only_owner]
     #[endpoint(initRound)]
     fn init_round(&self) {
         self.require_distribution_complete();
@@ -43,6 +58,12 @@ pub trait ScStaking:
         addresses_and_balances: MultiValueEncoded<MultiValue2<ManagedAddress, BigUint>>,
     ) {
         self.snapshot_internal(self.current_round().get(), addresses_and_balances);
+    }
+
+    #[payable("*")]
+    #[endpoint(fundRewards)]
+    fn fund_rewards(&self) {
+        self.fund_rewards_internal(self.current_round().get());
     }
 
     #[only_owner]

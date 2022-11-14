@@ -28,6 +28,17 @@ Parameters:
 
 # Owner endpoints
 
+## configure
+
+Callable by owner only.
+
+Parameters:
+
+* treasury_address: ManagedAddress - will earn 30% of fees
+* team_a_address: ManagedAddress - will earn 10% of fees
+* team_j_address: ManagedAddress - will earn 5% of fees
+* team_p_address: ManagedAddress - will earn 5% of fees
+
 ## configureToken
 
 Allow token as rewards.

@@ -4,6 +4,22 @@
     {
       "step": "setState",
       "accounts": {
+        "address:team_a": {
+          "nonce": "0",
+          "balance": "0"
+        },
+        "address:team_j": {
+          "nonce": "0",
+          "balance": "0"
+        },
+        "address:team_p": {
+          "nonce": "0",
+          "balance": "0"
+        },
+        "address:treasury": {
+          "nonce": "0",
+          "balance": "0"
+        },
         "address:user1": {
           "nonce": "0",
           "balance": "0"
