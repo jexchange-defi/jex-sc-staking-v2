@@ -59,14 +59,32 @@ pub trait RewardsModule: crate::tokens::TokensModule + crate::snapshots::Snapsho
         let total_balance = &self.snapshot_total_balance().get();
 
         for reward in self.rewards_for_round(round).iter() {
-            let send_amount = (&reward.balance * address_balance) / total_balance;
+            let amount_to_send = (&reward.balance * address_balance) / total_balance;
 
             self.send()
-                .direct_esdt(&address, &reward.token, reward.nonce, &send_amount);
+                .direct_esdt(&address, &reward.token, reward.nonce, &amount_to_send);
+
+            self.rewards_distribution_event(
+                round,
+                address,
+                &reward.token,
+                reward.nonce,
+                &amount_to_send,
+            );
         }
     }
 
     #[view(getRewardsForRound)]
     #[storage_mapper("rewards_for_round")]
     fn rewards_for_round(&self, round: u32) -> VecMapper<TokenAndBalance<Self::Api>>;
+
+    #[event("rewards_distribution")]
+    fn rewards_distribution_event(
+        &self,
+        #[indexed] round: u32,
+        #[indexed] receiver: &ManagedAddress,
+        #[indexed] token: &TokenIdentifier,
+        #[indexed] nonce: u64,
+        amount: &BigUint,
+    );
 }

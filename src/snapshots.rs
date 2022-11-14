@@ -8,8 +8,9 @@ static SNAPSHOT_NOT_ENABLED_ERR: &[u8] = b"Snapshots are disabled";
 pub trait SnapshotsModule {
     #[only_owner]
     #[endpoint]
-    fn snapshot(
+    fn snapshot_internal(
         &self,
+        round: u32,
         addresses_and_balances: MultiValueEncoded<MultiValue2<ManagedAddress, BigUint>>,
     ) {
         require!(self.snapshots_enabled().get(), SNAPSHOT_NOT_ENABLED_ERR);
@@ -22,9 +23,17 @@ pub trait SnapshotsModule {
             self.snapshot_address_balance(&address)
                 .update(|x| *x += balance.clone());
 
-            self.snapshot_total_balance().update(|x| *x += balance);
+            self.snapshot_total_balance()
+                .update(|x| *x += balance.clone());
 
-            self.all_addresses().insert(address);
+            self.all_addresses().insert(address.clone());
+
+            self.snapshot_event(
+                round,
+                &address,
+                self.blockchain().get_block_epoch(),
+                &balance,
+            );
         }
     }
 
@@ -57,4 +66,13 @@ pub trait SnapshotsModule {
     #[view(getSnapshotTotalBalance)]
     #[storage_mapper("snapshot_total_balance")]
     fn snapshot_total_balance(&self) -> SingleValueMapper<BigUint>;
+
+    #[event("snapshot")]
+    fn snapshot_event(
+        &self,
+        #[indexed] round: u32,
+        #[indexed] address: &ManagedAddress,
+        #[indexed] epoch: u64,
+        amount: &BigUint,
+    );
 }

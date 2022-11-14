@@ -37,6 +37,15 @@ pub trait ScStaking:
     }
 
     #[only_owner]
+    #[endpoint]
+    fn snapshot(
+        &self,
+        addresses_and_balances: MultiValueEncoded<MultiValue2<ManagedAddress, BigUint>>,
+    ) {
+        self.snapshot_internal(self.current_round().get(), addresses_and_balances);
+    }
+
+    #[only_owner]
     #[endpoint(prepareRewards)]
     fn prepare_rewards(&self) {
         let current_round = self.current_round().get();
