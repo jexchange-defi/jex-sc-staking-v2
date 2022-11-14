@@ -44,7 +44,9 @@ Parameters:
 Allow token as rewards.
 
 Parameters:
-* min_amount: BigUint - minimum threshold to consider the token as rewards during rewards calculation.
+* token_identifier: token identifier
+* nonce: token nonce
+* threshold: BigUint - minimum amount to consider the token as rewards during rewards calculation.
 
 ## initRound
 
@@ -68,7 +70,7 @@ Iterate over all configured tokens and freeze the current SC balance if greater 
 
 See `tokens` storage.
 
-Can be called multiple times as long as the claim period is not started.
+Can be called only once per round (be careful then).
 
 Rewards can be seen using `getRewardsForRound` view.
 
@@ -109,6 +111,9 @@ Return the rewards for the given round.
 Parameters:
 * round: integer - round number.
 
+## getSnapshotTotalBalance
+
+Return the total of snapshot balances
 
 # Storage
 
@@ -126,6 +131,7 @@ VecMapper of TokenAndThreshold
 
 TokenAndThreshold {
     token: TokenIdentifer;
+    nonce: u64;
     threshold: BigUint;
 }
 
@@ -143,5 +149,6 @@ SingleValueMapper: int -> ManagedVec<TokenAndBalance>
 
 TokenAndBalance {
     token: TokenIdentifer;
+    nonce: u64;
     balance: BigUint;
 }
