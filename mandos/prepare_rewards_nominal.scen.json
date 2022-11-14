@@ -79,10 +79,35 @@
               "2-nonce": "u64:0",
               "3-balance": "biguint:200,000000000000000000"
             },
+            "str:snapshots_enabled": "false",
             "+": "*"
           }
         },
         "+": ""
+      }
+    },
+    {
+      "step": "scQuery",
+      "tx": {
+        "to": "sc:staking",
+        "function": "getRewardsForRound",
+        "arguments": ["1"]
+      },
+      "expect": {
+        "out": [
+          {
+            "1-token": "nested:str:TOKEN-abcdef",
+            "2-nonce": "u64:0",
+            "3-balance": "biguint:30,000000000000000000"
+          },
+          {
+            "1-token": "nested:str:WEGLD-aaaaaa",
+            "2-nonce": "u64:0",
+            "3-balance": "biguint:200,000000000000000000"
+          }
+        ],
+        "status": "",
+        "logs": []
       }
     }
   ]

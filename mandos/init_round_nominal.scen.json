@@ -53,6 +53,19 @@
         },
         "+": ""
       }
+    },
+    {
+      "step": "scQuery",
+      "tx": {
+        "to": "sc:staking",
+        "function": "getCurrentRound",
+        "arguments": []
+      },
+      "expect": {
+        "out": ["7"],
+        "status": "",
+        "logs": []
+      }
     }
   ]
 }

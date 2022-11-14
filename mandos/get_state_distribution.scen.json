@@ -1,0 +1,58 @@
+{
+  "name": "getState (accumulation)",
+  "steps": [
+    {
+      "step": "externalSteps",
+      "path": "init.scen.json"
+    },
+    {
+      "step": "setState",
+      "accounts": {
+        "sc:staking": {
+          "nonce": "0",
+          "balance": "0",
+          "code": "file:../output/jex-sc-staking-v2.wasm",
+          "esdt": {},
+          "owner": "address:owner",
+          "storage": {
+            "str:all_addresses.len": "3",
+            "str:all_addresses.item|u32:1": "address:user1",
+            "str:all_addresses.item|u32:2": "address:user2",
+            "str:all_addresses.item|u32:3": "address:user3",
+            "str:current_round": "3",
+            "str:rewards_for_round|u32:3|str:.len": "2",
+            "str:rewards_for_round|u32:3|str:.item|u32:1": {
+              "1-token": "nested:str:TOKEN-abcdef",
+              "2-nonce": "u64:0",
+              "3-balance": "biguint:30,000000000000000000"
+            },
+            "str:rewards_for_round|u32:3|str:.item|u32:2": {
+              "1-token": "nested:str:WEGLD-aaaaaa",
+              "2-nonce": "u64:0",
+              "3-balance": "biguint:200,000000000000000000"
+            }
+          }
+        }
+      }
+    },
+    {
+      "step": "scQuery",
+      "tx": {
+        "to": "sc:staking",
+        "function": "getState",
+        "arguments": []
+      },
+      "expect": {
+        "out": [
+          {
+            "1-round": "u32:3",
+            "2-accumulation": "0x00",
+            "3-distribution": "0x01"
+          }
+        ],
+        "status": "",
+        "logs": []
+      }
+    }
+  ]
+}

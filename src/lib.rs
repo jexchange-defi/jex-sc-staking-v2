@@ -7,6 +7,13 @@ mod tokens;
 elrond_wasm::imports!();
 elrond_wasm::derive_imports!();
 
+#[derive(TopEncode, TypeAbi)]
+pub struct StakingState {
+    current_round: u32,
+    is_accumulation_period: bool,
+    is_distribution_period: bool,
+}
+
 #[elrond_wasm::derive::contract]
 pub trait ScStaking:
     rewards::RewardsModule + snapshots::SnapshotsModule + tokens::TokensModule
@@ -28,11 +35,26 @@ pub trait ScStaking:
         self.reset_snapshots();
         self.enable_snapshots();
     }
+
+    #[view(getState)]
+    fn state(&self) -> StakingState {
+        let round = self.current_round().get();
+        let accumulation = self.rewards_for_round(round).is_empty();
+        let distribution = !accumulation && !self.all_addresses().is_empty();
+        let state = StakingState {
+            current_round: round,
+            is_accumulation_period: accumulation,
+            is_distribution_period: distribution,
+        };
+        return state;
+    }
+
     #[only_owner]
     #[endpoint(prepareRewards)]
     fn prepare_rewards(&self) {
         let current_round = self.current_round().get();
         self.prepare_rewards_internal(current_round);
+        self.disable_snapshots();
     }
 
     #[view(getCurrentRound)]

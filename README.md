@@ -83,7 +83,7 @@ None
 
 Return the current staking round (integer)
 
-## getCurrentState
+## getState
 
 Return the current state of staking (Accumulation or Distribution)
 

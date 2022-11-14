@@ -12,6 +12,7 @@ elrond_wasm_node::wasm_endpoints! {
         getCurrentRound
         getRewardsForRound
         getSnapshotTotalBalance
+        getState
         getTokenThresholds
         initRound
         prepareRewards
