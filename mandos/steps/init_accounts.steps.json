@@ -7,6 +7,22 @@
         "address:user1": {
           "nonce": "0",
           "balance": "0"
+        },
+        "address:user2": {
+          "nonce": "0",
+          "balance": "0"
+        },
+        "address:user3": {
+          "nonce": "0",
+          "balance": "0"
+        },
+        "address:user4": {
+          "nonce": "0",
+          "balance": "0"
+        },
+        "address:user5": {
+          "nonce": "0",
+          "balance": "0"
         }
       }
     }

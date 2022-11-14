@@ -65,11 +65,15 @@ Rewards can be seen using `getRewardsForRound` view.
 
 Distribute rewards to all snapshot addresses.
 
-Iterate over `all_addresses` storage:
+Iterate over `all_addresses` storage (with `limit` parameter):
 * calculate shares
 * distribute rewards
 * set snapshot balance to zero
 * remove address from `all_addresses`.
+
+Parameters:
+
+* limit: u32 - max addresses to process
 
 
 # Public endpoints

@@ -1,6 +1,8 @@
 elrond_wasm::imports!();
 elrond_wasm::derive_imports!();
 
+use elrond_wasm::types::heap::Vec;
+
 #[derive(TopEncode, TopDecode, TypeAbi)]
 pub struct TokenAndBalance<M: ManagedTypeApi> {
     token: TokenIdentifier<M>,
@@ -8,10 +10,12 @@ pub struct TokenAndBalance<M: ManagedTypeApi> {
     balance: BigUint<M>,
 }
 
+static DISTRIBUTION_ALREADY_COMPLETE: &[u8] = b"Distribution already complete";
 static REWARDS_ALREADY_PREPARED: &[u8] = b"Rewards already prepared";
+static REWARDS_NOT_PREPARED: &[u8] = b"Rewards are not prepared";
 
 #[elrond_wasm::module]
-pub trait RewardsModule: crate::tokens::TokensModule {
+pub trait RewardsModule: crate::tokens::TokensModule + crate::snapshots::SnapshotsModule {
     fn prepare_rewards_internal(&self, round: u32) {
         let mut rewards = self.rewards_for_round(round);
         require!(rewards.is_empty(), REWARDS_ALREADY_PREPARED);
@@ -30,6 +34,35 @@ pub trait RewardsModule: crate::tokens::TokensModule {
                 };
                 rewards.push(&reward);
             }
+        }
+    }
+
+    fn distribute_rewards_internal(&self, round: u32, limit: usize) {
+        let rewards = self.rewards_for_round(round);
+        require!(!rewards.is_empty(), REWARDS_NOT_PREPARED);
+
+        require!(
+            !self.all_addresses().is_empty(),
+            DISTRIBUTION_ALREADY_COMPLETE
+        );
+
+        let addresses: Vec<ManagedAddress> = self.all_addresses().iter().take(limit).collect();
+        for address in addresses {
+            self.distribute_rewards_for_address(round, &address);
+            self.snapshot_address_balance(&address).clear();
+            self.all_addresses().swap_remove(&address);
+        }
+    }
+
+    fn distribute_rewards_for_address(&self, round: u32, address: &ManagedAddress) {
+        let address_balance = &self.snapshot_address_balance(address).get();
+        let total_balance = &self.snapshot_total_balance().get();
+
+        for reward in self.rewards_for_round(round).iter() {
+            let send_amount = (&reward.balance * address_balance) / total_balance;
+
+            self.send()
+                .direct_esdt(&address, &reward.token, reward.nonce, &send_amount);
         }
     }
 

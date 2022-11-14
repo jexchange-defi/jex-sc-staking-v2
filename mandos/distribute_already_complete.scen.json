@@ -1,5 +1,5 @@
 {
-  "name": "getState (distribution done)",
+  "name": "distribute (already complete)",
   "steps": [
     {
       "step": "externalSteps",
@@ -33,22 +33,21 @@
       }
     },
     {
-      "step": "scQuery",
+      "step": "scCall",
+      "txId": "distributeAlreadyComplete",
       "tx": {
+        "from": "address:owner",
         "to": "sc:staking",
-        "function": "getState",
-        "arguments": []
+        "function": "distribute",
+        "arguments": ["10"],
+        "gasLimit": "10,000,000",
+        "gasPrice": "0"
       },
       "expect": {
-        "out": [
-          {
-            "1-round": "u32:3",
-            "2-accumulation": "0x00",
-            "3-distribution": "0x00"
-          }
-        ],
-        "status": "",
-        "logs": []
+        "status": "4",
+        "message": "str:Distribution already complete",
+        "gas": "*",
+        "refund": "*"
       }
     }
   ]

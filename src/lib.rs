@@ -36,6 +36,21 @@ pub trait ScStaking:
         self.enable_snapshots();
     }
 
+    #[only_owner]
+    #[endpoint(prepareRewards)]
+    fn prepare_rewards(&self) {
+        let current_round = self.current_round().get();
+        self.prepare_rewards_internal(current_round);
+        self.disable_snapshots();
+    }
+
+    #[only_owner]
+    #[endpoint]
+    fn distribute(&self, limit: usize) {
+        let current_round = self.current_round().get();
+        self.distribute_rewards_internal(current_round, limit);
+    }
+
     #[view(getState)]
     fn state(&self) -> StakingState {
         let round = self.current_round().get();
@@ -47,14 +62,6 @@ pub trait ScStaking:
             is_distribution_period: distribution,
         };
         return state;
-    }
-
-    #[only_owner]
-    #[endpoint(prepareRewards)]
-    fn prepare_rewards(&self) {
-        let current_round = self.current_round().get();
-        self.prepare_rewards_internal(current_round);
-        self.disable_snapshots();
     }
 
     #[view(getCurrentRound)]

@@ -1,5 +1,5 @@
 {
-  "name": "getState (accumulation)",
+  "name": "getState (distribution)",
   "steps": [
     {
       "step": "externalSteps",

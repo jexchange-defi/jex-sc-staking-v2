@@ -1,0 +1,124 @@
+{
+  "name": "distribute (nominal) (step 1)",
+  "steps": [
+    {
+      "step": "externalSteps",
+      "path": "init.scen.json"
+    },
+    {
+      "step": "setState",
+      "accounts": {
+        "sc:staking": {
+          "nonce": "0",
+          "balance": "0",
+          "code": "file:../output/jex-sc-staking-v2.wasm",
+          "esdt": {
+            "str:TOKEN-abcdef": "30,000000000000000000",
+            "str:WEGLD-aaaaaa": "200,000000000000000000"
+          },
+          "owner": "address:owner",
+          "storage": {
+            "str:all_addresses.len": "5",
+            "str:all_addresses.index|address:user1": "1",
+            "str:all_addresses.index|address:user2": "2",
+            "str:all_addresses.index|address:user3": "3",
+            "str:all_addresses.index|address:user4": "4",
+            "str:all_addresses.index|address:user5": "5",
+            "str:all_addresses.item|u32:1": "address:user1",
+            "str:all_addresses.item|u32:2": "address:user2",
+            "str:all_addresses.item|u32:3": "address:user3",
+            "str:all_addresses.item|u32:4": "address:user4",
+            "str:all_addresses.item|u32:5": "address:user5",
+            "str:current_round": "3",
+            "str:snapshot_address_balance|address:user1": "9000,000000000000000000",
+            "str:snapshot_address_balance|address:user2": "500,000000000000000000",
+            "str:snapshot_address_balance|address:user3": "100,000000000000000000",
+            "str:snapshot_address_balance|address:user4": "100,000000000000000000",
+            "str:snapshot_address_balance|address:user5": "300,000000000000000000",
+            "str:rewards_for_round|u32:3|str:.len": "2",
+            "str:rewards_for_round|u32:3|str:.item|u32:1": {
+              "1-token": "nested:str:TOKEN-abcdef",
+              "2-nonce": "u64:0",
+              "3-balance": "biguint:30,000000000000000000"
+            },
+            "str:rewards_for_round|u32:3|str:.item|u32:2": {
+              "1-token": "nested:str:WEGLD-aaaaaa",
+              "2-nonce": "u64:0",
+              "3-balance": "biguint:200,000000000000000000"
+            },
+            "str:snapshot_total_balance": "10000,000000000000000000"
+          }
+        }
+      }
+    },
+    {
+      "step": "scCall",
+      "txId": "distributeNominal",
+      "tx": {
+        "from": "address:owner",
+        "to": "sc:staking",
+        "function": "distribute",
+        "arguments": ["3"],
+        "gasLimit": "10,000,000",
+        "gasPrice": "0"
+      },
+      "expect": {
+        "status": "0",
+        "message": "",
+        "gas": "*",
+        "refund": "*"
+      }
+    },
+    {
+      "step": "checkState",
+      "accounts": {
+        "address:user1": {
+          "balance": "0",
+          "esdt": {
+            "str:TOKEN-abcdef": "27,000000000000000000",
+            "str:WEGLD-aaaaaa": "180,000000000000000000"
+          }
+        },
+        "address:user2": {
+          "balance": "0",
+          "esdt": {
+            "str:TOKEN-abcdef": "1,500000000000000000",
+            "str:WEGLD-aaaaaa": "10,000000000000000000"
+          }
+        },
+        "address:user3": {
+          "balance": "0",
+          "esdt": {
+            "str:TOKEN-abcdef": "0,300000000000000000",
+            "str:WEGLD-aaaaaa": "2,000000000000000000"
+          }
+        },
+        "sc:staking": {
+          "nonce": "0",
+          "balance": "0",
+          "code": "file:../output/jex-sc-staking-v2.wasm",
+          "esdt": {
+            "str:TOKEN-abcdef": "1,200000000000000000",
+            "str:WEGLD-aaaaaa": "8,000000000000000000"
+          },
+          "storage": {
+            "str:all_addresses.len": "2",
+            "str:all_addresses.index|address:user5": "1",
+            "str:all_addresses.index|address:user4": "2",
+            "str:all_addresses.item|u32:1": "address:user5",
+            "str:all_addresses.item|u32:2": "address:user4",
+            "str:current_round": "3",
+            "str:snapshot_address_balance|address:user1": "",
+            "str:snapshot_address_balance|address:user2": "",
+            "str:snapshot_address_balance|address:user3": "",
+            "str:snapshot_address_balance|address:user4": "100,000000000000000000",
+            "str:snapshot_address_balance|address:user5": "300,000000000000000000",
+            "str:snapshot_total_balance": "10000,000000000000000000",
+            "+": "*"
+          }
+        },
+        "+": ""
+      }
+    }
+  ]
+}
