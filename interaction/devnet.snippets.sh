@@ -123,6 +123,10 @@ getAllAddresses() {
     erdpy --verbose contract query ${SC_ADDRESS} --function "getAllAddresses" --proxy=${PROXY}
 }
 
+getNbAddresses() {
+    erdpy --verbose contract query ${SC_ADDRESS} --function "getNbAddresses" --proxy=${PROXY}
+}
+
 CMD=$1
 shift
 

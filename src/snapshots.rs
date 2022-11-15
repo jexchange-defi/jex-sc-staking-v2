@@ -57,6 +57,11 @@ pub trait SnapshotsModule {
     #[storage_mapper("all_addresses")]
     fn all_addresses(&self) -> UnorderedSetMapper<ManagedAddress>;
 
+    #[view(getNbAddresses)]
+    fn nb_addresses(&self) -> usize {
+        return self.all_addresses().len();
+    }
+
     #[storage_mapper("snapshot_address_balance")]
     fn snapshot_address_balance(&self, address: &ManagedAddress) -> SingleValueMapper<BigUint>;
 

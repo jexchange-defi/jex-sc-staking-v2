@@ -111,6 +111,10 @@ Return the rewards for the given round.
 Parameters:
 * round: integer - round number.
 
+## getNbAddresses
+
+Return the current number of addresses.
+
 ## getSnapshotTotalBalance
 
 Return the total of snapshot balances
