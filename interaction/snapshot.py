@@ -9,6 +9,7 @@ from erdpy.proxy.core import ElrondProxy
 from erdpy.proxy.messages import TransactionOnNetwork
 from erdpy.transactions import Transaction
 from more_itertools import grouper
+from utils import ensure_even_length
 
 logging.basicConfig(level=logging.INFO)
 LOG = logging.getLogger()
@@ -97,12 +98,6 @@ def _export_holders(api_url: str, token_identifier: str, min_amount: int):
     LOG.info(f'Total {token_identifier} held: {int(total_hbal):,}')
 
 
-def _ensure_even_length(string: str) -> str:
-    if len(string) % 2 == 1:
-        return '0' + string
-    return string
-
-
 def _register_holders(proxy, network, sc_address, holders):
     LOG.info('Register holders chunk')
 
@@ -114,7 +109,7 @@ def _register_holders(proxy, network, sc_address, holders):
 
         hexbal = hex(int(holder['balance']))[2:]
         data += f"@{Address(holder['address']).hex()}"
-        data += f'@{_ensure_even_length(hexbal)}'
+        data += f'@{ensure_even_length(hexbal)}'
 
         gas_limit += GAS_LIMIT_PER_ADDRESS
         processed_holders.append(holder['address'])
