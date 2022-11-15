@@ -1,8 +1,6 @@
 elrond_wasm::imports!();
 elrond_wasm::derive_imports!();
 
-use elrond_wasm::types::heap::Vec;
-
 #[derive(TopEncode, TopDecode, TypeAbi)]
 pub struct TokenAndBalance<M: ManagedTypeApi> {
     token: TokenIdentifier<M>,
@@ -82,11 +80,15 @@ pub trait RewardsModule: crate::tokens::TokensModule + crate::snapshots::Snapsho
             DISTRIBUTION_ALREADY_COMPLETE
         );
 
-        let addresses: Vec<ManagedAddress> = self.all_addresses().iter().take(limit).collect();
-        for address in addresses {
+        for _ in 0..limit {
+            let address = self.all_addresses().get_by_index(1);
             self.distribute_rewards_for_address(round, &address);
             self.snapshot_address_balance(&address).clear();
             self.all_addresses().swap_remove(&address);
+
+            if self.all_addresses().is_empty() {
+                break;
+            }
         }
     }
 
