@@ -97,6 +97,14 @@ getRewardsForRound() {
         --proxy=${PROXY}
 }
 
+getSharesOfAddress() {
+    read -p "Address: " ADDRESS
+    HEX_ADDRESS="0x$(erdpy wallet bech32 --decode ${ADDRESS})"
+    erdpy --verbose contract query ${SC_ADDRESS} \
+        --function "getSharesOfAddress" --arguments "${HEX_ADDRESS}" \
+        --proxy=${PROXY}
+}
+
 getSnapshotTotalBalance() {
     erdpy --verbose contract query ${SC_ADDRESS} --function "getSnapshotTotalBalance" --proxy=${PROXY}
 }
