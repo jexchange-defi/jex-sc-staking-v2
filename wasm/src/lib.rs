@@ -13,6 +13,7 @@ elrond_wasm_node::wasm_endpoints! {
         fundRewards
         getAllAddresses
         getCurrentRound
+        getCurrentRoundRewards
         getNbAddresses
         getRewardsForRound
         getSnapshotTotalBalance

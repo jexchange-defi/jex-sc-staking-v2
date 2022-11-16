@@ -4,6 +4,8 @@ mod rewards;
 mod snapshots;
 mod tokens;
 
+use elrond_wasm::types::heap::Vec;
+
 elrond_wasm::imports!();
 elrond_wasm::derive_imports!();
 
@@ -97,4 +99,12 @@ pub trait ScStaking:
     #[view(getCurrentRound)]
     #[storage_mapper("current_round")]
     fn current_round(&self) -> SingleValueMapper<u32>;
+
+    #[view(getCurrentRoundRewards)]
+    fn get_current_round_rewards(&self) -> Vec<rewards::TokenAndBalance<Self::Api>> {
+        return self
+            .rewards_for_round(self.current_round().get())
+            .iter()
+            .collect();
+    }
 }

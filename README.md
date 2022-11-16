@@ -109,6 +109,10 @@ Return the current staking round (integer)
 
 Return the current state of staking (Accumulation or Distribution)
 
+## getCurrentRoundRewards
+
+Return the rewards of the current round.
+
 ## getRewardsForRound
 
 Return the rewards for the given round.
