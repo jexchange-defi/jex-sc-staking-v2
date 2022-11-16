@@ -56,6 +56,7 @@ def _export_holders(api_url: str, token_identifier: str, min_amount: int):
     LOG.info(f'Export holders of {token_identifier}')
 
     token_info = _fetch_token_info(api_url, token_identifier)
+    token_decimals = token_info['decimals']
 
     from_ = 0
     size = 100
@@ -77,7 +78,7 @@ def _export_holders(api_url: str, token_identifier: str, min_amount: int):
             holders = json_
             holders = filter(lambda x: _is_valid_holder(x['address']), holders)
             holders = filter(lambda x: int(
-                x['balance']) >= min_amount, holders)
+                x['balance']) / 10**token_decimals >= min_amount, holders)
             holders = list(holders)
 
             if len(holders) == 0:
@@ -86,7 +87,7 @@ def _export_holders(api_url: str, token_identifier: str, min_amount: int):
             for holder in holders:
                 nb += 1
                 bal = int(holder['balance'])
-                hbal = int(bal / 10**token_info['decimals'])
+                hbal = int(bal / 10**token_decimals)
                 line = f"{nb};{holder['address']};{bal};{hbal};"
                 print(line)
                 out.write(line)
@@ -204,6 +205,7 @@ if __name__ == '__main__':
         LOG.setLevel(logging.DEBUG)
 
     if args.action == 'export_holders':
+        assert args.api_url is not None, '--api_url is mandatory for "export_holders action"'
         assert args.token_identifier is not None, '--token_identifier is mandatory for "export_holders action"'
         assert args.min_amount is not None, '--min_amount is mandatory for "export_holders action"'
         _export_holders(args.api_url, args.token_identifier, args.min_amount)

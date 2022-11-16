@@ -16,6 +16,11 @@ Workflow:
 * distribution
 * (start over)
 
+Regular (manual) snapshots of holders are taken. Balances of holders are accumulating at each snapshot.
+
+Upon distribution, each holder receives its share of the rewards based on its accumulated balance out of the sum of all the balances.
+
+See [interaction](./interaction/README.md) for more information about how to operate the smart contract.
 
 # Init
 
