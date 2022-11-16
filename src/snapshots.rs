@@ -4,6 +4,12 @@ elrond_wasm::derive_imports!();
 static DISTRIB_INCOMPLETE_ERR: &[u8] = b"Distribution is incomplete";
 static SNAPSHOT_NOT_ENABLED_ERR: &[u8] = b"Snapshots are disabled";
 
+#[derive(TopEncode, TypeAbi)]
+pub struct SharesOfAddress<M: ManagedTypeApi> {
+    address_balance: BigUint<M>,
+    total_balance: BigUint<M>,
+}
+
 #[elrond_wasm::module]
 pub trait SnapshotsModule {
     #[only_owner]
@@ -71,6 +77,15 @@ pub trait SnapshotsModule {
     #[view(getSnapshotTotalBalance)]
     #[storage_mapper("snapshot_total_balance")]
     fn snapshot_total_balance(&self) -> SingleValueMapper<BigUint>;
+
+    #[view(getSharesOfAddress)]
+    fn get_shares_of_address(&self, address: ManagedAddress) -> SharesOfAddress<Self::Api> {
+        let balance = self.snapshot_address_balance(&address).get();
+        return SharesOfAddress::<Self::Api> {
+            address_balance: balance,
+            total_balance: self.snapshot_total_balance().get(),
+        };
+    }
 
     #[event("snapshot")]
     fn snapshot_event(

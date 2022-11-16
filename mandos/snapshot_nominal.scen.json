@@ -56,6 +56,24 @@
         },
         "+": ""
       }
+    },
+    {
+      "step": "scQuery",
+      "tx": {
+        "to": "sc:staking",
+        "function": "getSharesOfAddress",
+        "arguments": ["address:user3"]
+      },
+      "expect": {
+        "out": [
+          {
+            "1-address_balance": "biguint:3000,000000000000000000",
+            "2-total_balance": "biguint:13500,000000000000000000"
+          }
+        ],
+        "status": "",
+        "logs": []
+      }
     }
   ]
 }

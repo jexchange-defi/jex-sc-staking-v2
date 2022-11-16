@@ -16,6 +16,7 @@ elrond_wasm_node::wasm_endpoints! {
         getCurrentRoundRewards
         getNbAddresses
         getRewardsForRound
+        getSharesOfAddress
         getSnapshotTotalBalance
         getState
         getTokenThresholds

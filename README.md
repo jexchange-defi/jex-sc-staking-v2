@@ -128,6 +128,18 @@ Return the current number of addresses.
 
 Return the total of snapshot balances
 
+## getSharesOfAddress
+
+Return the shares of an address.
+
+Parameters:
+* address: ManagedAddress.
+
+Returns:
+
+* address_balance: BigUint
+* total_balance: BigUint
+
 # Storage
 
 ## current_round
