@@ -108,6 +108,10 @@ getTokenThresholds() {
     erdpy --verbose contract query ${SC_ADDRESS} --function "getTokenThresholds" --proxy=${PROXY}
 }
 
+getCurrentRoundRewards() {
+    erdpy --verbose contract query ${SC_ADDRESS} --function "getCurrentRoundRewards" --proxy=${PROXY}
+}
+
 getRewardsForRound() {
     read -p "Round: " ROUND
     erdpy --verbose contract query ${SC_ADDRESS} \
