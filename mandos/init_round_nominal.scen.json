@@ -15,7 +15,8 @@
           "owner": "address:owner",
           "storage": {
             "str:current_round": "6",
-            "str:snapshot_total_balance": "999,000000000000000000"
+            "str:snapshot_total_balance": "999,000000000000000000",
+            "str:snapshots_enabled": "false"
           }
         }
       }
