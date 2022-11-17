@@ -113,6 +113,8 @@ Return the current state of staking (Accumulation or Distribution)
 
 Return the rewards of the current round.
 
+If rewards are not prepared yet, current balances (over the [configured thresholds](#configuretoken)) are returned.
+
 ## getRewardsForRound
 
 Return the rewards for the given round.
