@@ -21,7 +21,6 @@ pub struct StakingState {
 pub trait ScStaking:
     rewards::RewardsModule + snapshots::SnapshotsModule + tokens::TokensModule
 {
-    #[only_owner]
     #[init]
     fn init(&self) {
         self.current_round().set_if_empty(1);
