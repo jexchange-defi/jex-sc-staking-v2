@@ -48,7 +48,7 @@
           "storage": {
             "str:current_round": "7",
             "str:snapshot_total_balance": "0",
-            "str:snapshots_enabled": "*"
+            "str:snapshots_enabled": "true"
           }
         },
         "+": ""
