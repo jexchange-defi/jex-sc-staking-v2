@@ -1,7 +1,9 @@
 elrond_wasm::imports!();
 elrond_wasm::derive_imports!();
 
-#[derive(NestedEncode, TopEncode, TopDecode, TypeAbi)]
+use elrond_wasm::types::heap::Vec;
+
+#[derive(Clone, ManagedVecItem, NestedEncode, TopEncode, TopDecode, TypeAbi)]
 pub struct TokenAndBalance<M: ManagedTypeApi> {
     token: TokenIdentifier<M>,
     nonce: u64,
@@ -55,6 +57,16 @@ pub trait RewardsModule: crate::tokens::TokensModule + crate::snapshots::Snapsho
         self.require_rewards_not_prepared(round);
 
         let mut rewards = self.rewards_for_round(round);
+
+        let calculated_rewards = &mut Vec::<TokenAndBalance<Self::Api>>::new();
+        self.calculate_current_rewards(calculated_rewards);
+
+        for reward in calculated_rewards {
+            rewards.push(&reward);
+        }
+    }
+
+    fn calculate_current_rewards(&self, rewards: &mut Vec<TokenAndBalance<Self::Api>>) {
         for token_and_threshold in self.token_thresholds().iter() {
             let sc_balance = self.blockchain().get_sc_balance(
                 &EgldOrEsdtTokenIdentifier::esdt(token_and_threshold.token.clone()),
@@ -67,7 +79,7 @@ pub trait RewardsModule: crate::tokens::TokensModule + crate::snapshots::Snapsho
                     nonce: token_and_threshold.nonce,
                     balance: sc_balance,
                 };
-                rewards.push(&reward);
+                rewards.push(reward.clone());
             }
         }
     }
