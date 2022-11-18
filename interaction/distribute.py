@@ -67,15 +67,15 @@ if __name__ == '__main__':
     if args.debug:
         LOG.setLevel(logging.DEBUG)
 
-        password = getpass.getpass(prompt='Keyfile password: ')
+    password = getpass.getpass(prompt='Keyfile password: ')
 
-        proxy = ElrondProxy(args.gateway_url)
-        network = proxy.get_network_config()
-        user = Account(key_file=args.keyfile, password=password)
-        user.sync_nonce(proxy)
+    proxy = ElrondProxy(args.gateway_url)
+    network = proxy.get_network_config()
+    user = Account(key_file=args.keyfile, password=password)
+    user.sync_nonce(proxy)
 
-        for i in range(0, args.repeat):
-            LOG.info(f'Loop #{i}')
-            _distribute(proxy, network, user, args.sc_address,
-                        args.limit, args.no_wait)
-            sleep(1)
+    for i in range(0, args.repeat):
+        LOG.info(f'Loop #{i}')
+        _distribute(proxy, network, user, args.sc_address,
+                    args.limit, args.no_wait)
+        sleep(1)
