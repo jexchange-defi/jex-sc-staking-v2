@@ -16,7 +16,13 @@ Workflow:
 * distribution
 * (start over)
 
+Here is a sequence that sums up the snapshot/reward process:
+
+![](doc/jex-staking-v2-sequence.png)
+
 Regular (manual) snapshots of holders are taken. Balances of holders are accumulating at each snapshot.
+
+In order to prevent speculation, snapshots are taken randomly.
 
 Upon distribution, each holder receives its share of the rewards based on its accumulated balance out of the sum of all the balances.
 
