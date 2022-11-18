@@ -58,7 +58,7 @@ initRound() {
 }
 
 prepareRewards() {
-    erdpy --verbose contract call ${SC_ADDRESS} --recall-nonce --keyfile=${KEYFILE} --gas-limit=5000000 \
+    erdpy --verbose contract call ${SC_ADDRESS} --recall-nonce --keyfile=${KEYFILE} --gas-limit=10000000 \
         --function="prepareRewards" \
         --proxy=${PROXY} --chain=${CHAIN} --send || return
 }
