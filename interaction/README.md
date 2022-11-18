@@ -104,7 +104,7 @@ To do so run the following script:
 
 You can verify the prepared rewards with:
 ```shell
-./xxxnet.snippets.sh getCurrentRoundRewards
+./xxxnet.snippets.sh getRewardsForRound
 
 Round: <-- the current round number
 ```
