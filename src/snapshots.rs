@@ -1,6 +1,8 @@
 elrond_wasm::imports!();
 elrond_wasm::derive_imports!();
 
+use elrond_wasm::types::heap::Vec;
+
 static DISTRIB_INCOMPLETE_ERR: &[u8] = b"Distribution is incomplete";
 static SNAPSHOT_NOT_ENABLED_ERR: &[u8] = b"Snapshots are disabled";
 
@@ -60,6 +62,15 @@ pub trait SnapshotsModule {
     }
 
     #[view(getAllAddresses)]
+    fn get_all_addresses(&self, from: usize, size: usize) -> MultiValueEncoded<ManagedAddress> {
+        let all_addresses = self.all_addresses();
+        let iter = all_addresses.iter().skip(from);
+        let addresses: Vec<ManagedAddress> = iter.take(size).collect();
+        let managed_addresses: ManagedVec<ManagedAddress> = addresses.into();
+        let result: MultiValueEncoded<ManagedAddress> = managed_addresses.into();
+        result
+    }
+
     #[storage_mapper("all_addresses")]
     fn all_addresses(&self) -> UnorderedSetMapper<ManagedAddress>;
 
