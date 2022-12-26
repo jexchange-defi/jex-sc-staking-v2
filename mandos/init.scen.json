@@ -1,0 +1,13 @@
+{
+  "name": "init",
+  "steps": [
+    {
+      "step": "externalSteps",
+      "path": "steps/init_accounts.steps.json"
+    },
+    {
+      "step": "externalSteps",
+      "path": "steps/deploy_contract.steps.json"
+    }
+  ]
+}

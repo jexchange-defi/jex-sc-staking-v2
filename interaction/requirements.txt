@@ -1,0 +1,2 @@
+erdpy>=2.0.4
+more-itertools>=9.0.0

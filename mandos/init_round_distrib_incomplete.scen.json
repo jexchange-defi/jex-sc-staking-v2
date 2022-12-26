@@ -1,0 +1,42 @@
+{
+  "name": "initRound (distribution incomplete)",
+  "steps": [
+    {
+      "step": "externalSteps",
+      "path": "init.scen.json"
+    },
+    {
+      "step": "setState",
+      "accounts": {
+        "sc:staking": {
+          "nonce": "0",
+          "balance": "0",
+          "code": "file:../output/jex-sc-staking-v2.wasm",
+          "owner": "address:owner",
+          "storage": {
+            "str:all_addresses.len": "31",
+            "str:current_round": "6"
+          }
+        }
+      }
+    },
+    {
+      "step": "scCall",
+      "txId": "initRoundDistribIncomplete",
+      "tx": {
+        "from": "address:owner",
+        "to": "sc:staking",
+        "function": "initRound",
+        "arguments": [],
+        "gasLimit": "10,000,000",
+        "gasPrice": "0"
+      },
+      "expect": {
+        "status": "4",
+        "message": "str:Distribution is incomplete",
+        "gas": "*",
+        "refund": "*"
+      }
+    }
+  ]
+}

@@ -1,0 +1,67 @@
+{
+  "name": "distribute (nominal) (step 2)",
+  "steps": [
+    {
+      "step": "externalSteps",
+      "path": "distribute_nominal_step_1.scen.json"
+    },
+    {
+      "step": "scCall",
+      "txId": "distributeNominal",
+      "tx": {
+        "from": "address:owner",
+        "to": "sc:staking",
+        "function": "distribute",
+        "arguments": ["3"],
+        "gasLimit": "10,000,000",
+        "gasPrice": "0"
+      },
+      "expect": {
+        "status": "0",
+        "message": "",
+        "gas": "*",
+        "refund": "*"
+      }
+    },
+    {
+      "step": "checkState",
+      "accounts": {
+        "address:user4": {
+          "balance": "0",
+          "esdt": {
+            "str:TOKEN-abcdef": "0,300000000000000000",
+            "str:WEGLD-aaaaaa": "2,000000000000000000"
+          }
+        },
+        "address:user5": {
+          "balance": "0",
+          "esdt": {
+            "str:TOKEN-abcdef": "0,900000000000000000",
+            "str:WEGLD-aaaaaa": "6,000000000000000000"
+          }
+        },
+        "sc:staking": {
+          "nonce": "0",
+          "balance": "0",
+          "code": "file:../output/jex-sc-staking-v2.wasm",
+          "esdt": {
+            "str:TOKEN-abcdef": "0",
+            "str:WEGLD-aaaaaa": "0"
+          },
+          "storage": {
+            "str:all_addresses.len": "0",
+            "str:current_round": "3",
+            "str:snapshot_address_balance|address:user1": "",
+            "str:snapshot_address_balance|address:user2": "",
+            "str:snapshot_address_balance|address:user3": "",
+            "str:snapshot_address_balance|address:user4": "",
+            "str:snapshot_address_balance|address:user5": "",
+            "str:snapshot_total_balance": "10000,000000000000000000",
+            "+": "*"
+          }
+        },
+        "+": ""
+      }
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+[package]
+name = "jex-sc-staking-v2-meta"
+version = "0.0.0"
+edition = "2018"
+publish = false
+authors = [ "Aurélien Passion <aurelien.passion@gmail.com>",]
+
+[dev-dependencies]
+
+[dependencies.jex-sc-staking-v2]
+path = ".."
+
+[dependencies.elrond-wasm]
+version = "0.36.1"
+
+[dependencies.elrond-wasm-debug]
+version = "0.36.1"

@@ -1,0 +1,50 @@
+{
+  "name": "configure",
+  "steps": [
+    {
+      "step": "externalSteps",
+      "path": "init.scen.json"
+    },
+    {
+      "step": "scCall",
+      "txId": "configure",
+      "tx": {
+        "from": "address:owner",
+        "to": "sc:staking",
+        "function": "configure",
+        "arguments": [
+          "address:treasury",
+          "address:team_a",
+          "address:team_j",
+          "address:team_p"
+        ],
+        "gasLimit": "6,000,000",
+        "gasPrice": "0"
+      },
+      "expect": {
+        "status": "0",
+        "message": "",
+        "gas": "*",
+        "refund": "*"
+      }
+    },
+    {
+      "step": "checkState",
+      "accounts": {
+        "sc:staking": {
+          "nonce": "*",
+          "balance": "*",
+          "code": "file:../output/jex-sc-staking-v2.wasm",
+          "storage": {
+            "str:team_a_address": "address:team_a",
+            "str:team_j_address": "address:team_j",
+            "str:team_p_address": "address:team_p",
+            "str:treasury_address": "address:treasury",
+            "+": "*"
+          }
+        },
+        "+": ""
+      }
+    }
+  ]
+}

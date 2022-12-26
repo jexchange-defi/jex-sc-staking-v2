@@ -1,0 +1,47 @@
+{
+  "name": "getState (accumulation)",
+  "steps": [
+    {
+      "step": "externalSteps",
+      "path": "init.scen.json"
+    },
+    {
+      "step": "setState",
+      "accounts": {
+        "sc:staking": {
+          "nonce": "0",
+          "balance": "0",
+          "code": "file:../output/jex-sc-staking-v2.wasm",
+          "esdt": {},
+          "owner": "address:owner",
+          "storage": {
+            "str:all_addresses.len": "3",
+            "str:all_addresses.item|u32:1": "address:user1",
+            "str:all_addresses.item|u32:2": "address:user2",
+            "str:all_addresses.item|u32:3": "address:user3",
+            "str:current_round": "3"
+          }
+        }
+      }
+    },
+    {
+      "step": "scQuery",
+      "tx": {
+        "to": "sc:staking",
+        "function": "getState",
+        "arguments": []
+      },
+      "expect": {
+        "out": [
+          {
+            "1-round": "u32:3",
+            "2-accumulation": "0x01",
+            "3-distribution": "0x00"
+          }
+        ],
+        "status": "",
+        "logs": []
+      }
+    }
+  ]
+}
