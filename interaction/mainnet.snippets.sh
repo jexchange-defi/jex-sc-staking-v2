@@ -13,7 +13,7 @@ deploy() {
     read answer
 
     erdpy --verbose contract deploy --project=${PROJECT} --metadata-payable \
-        --keyfile=${KEYFILE} --gas-limit=50000000 --outfile="deploy-mainnet.interaction.json" \
+        --keyfile=${KEYFILE} --gas-limit=70000000 --outfile="deploy-mainnet.interaction.json" \
         --proxy=${PROXY} --chain=${CHAIN} --recall-nonce --send || return
 
     SC_ADDRESS=$(erdpy data parse --file="deploy-mainnet.interaction.json" --expression="data['contractAddress']")
@@ -29,7 +29,7 @@ upgrade() {
     read answer
 
     erdpy --verbose contract upgrade --project=${PROJECT} --metadata-payable \
-        --keyfile=${KEYFILE} --gas-limit=50000000 --outfile="deploy-mainnet.interaction.json" \
+        --keyfile=${KEYFILE} --gas-limit=70000000 --outfile="deploy-mainnet.interaction.json" \
         --proxy=${PROXY} --chain=${CHAIN} --recall-nonce --send ${SC_ADDRESS} || return
 
     echo ""
