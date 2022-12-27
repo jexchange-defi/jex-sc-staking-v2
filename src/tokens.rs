@@ -10,12 +10,17 @@ pub struct TokenAndThreshold<M: ManagedTypeApi> {
 
 #[elrond_wasm::module]
 pub trait TokensModule {
-    #[only_owner]
-    #[endpoint(configureToken)]
-    fn configure_token(&self, token_identifier: TokenIdentifier, nonce: u64, threshold: BigUint) {
+    // owner endpoints
+
+    fn configure_token_inner(
+        &self,
+        token_identifier: &TokenIdentifier,
+        nonce: u64,
+        threshold: &BigUint,
+    ) {
         let mut found = false;
         for (idx, mut token_threshold) in self.token_thresholds().iter().enumerate() {
-            if token_threshold.token == token_identifier && token_threshold.nonce == nonce {
+            if &token_threshold.token == token_identifier && token_threshold.nonce == nonce {
                 token_threshold.threshold = threshold.clone();
                 found = true;
                 self.token_thresholds().set(idx + 1, &token_threshold);
@@ -25,13 +30,15 @@ pub trait TokensModule {
 
         if !found {
             let token_threshold = TokenAndThreshold::<Self::Api> {
-                token: token_identifier,
+                token: token_identifier.clone(),
                 nonce,
-                threshold,
+                threshold: threshold.clone(),
             };
             self.token_thresholds().push(&token_threshold);
         }
     }
+
+    // storage & views
 
     #[view(getTokenThresholds)]
     #[storage_mapper("token_thresholds")]

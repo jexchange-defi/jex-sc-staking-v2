@@ -21,11 +21,15 @@ pub struct StakingState {
 pub trait ScStaking:
     rewards::RewardsModule + snapshots::SnapshotsModule + tokens::TokensModule
 {
+    // init
+
     #[init]
     fn init(&self) {
         self.current_round().set_if_empty(1);
         self.enable_snapshots();
     }
+
+    // owner endpoints
 
     #[only_owner]
     #[endpoint]
@@ -40,6 +44,12 @@ pub trait ScStaking:
         self.team_a_address().set(team_a_address);
         self.team_j_address().set(team_j_address);
         self.team_p_address().set(team_p_address);
+    }
+
+    #[only_owner]
+    #[endpoint(configureToken)]
+    fn configure_token(&self, token_identifier: TokenIdentifier, nonce: u64, threshold: BigUint) {
+        self.configure_token_inner(&token_identifier, nonce, &threshold);
     }
 
     #[only_owner]
@@ -82,6 +92,8 @@ pub trait ScStaking:
         let current_round = self.current_round().get();
         self.distribute_rewards_internal(current_round, limit);
     }
+
+    // storage & views
 
     #[view(getState)]
     fn state(&self) -> StakingState {

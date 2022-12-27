@@ -5,9 +5,9 @@
 ////////////////////////////////////////////////////
 
 // Init:                                 1
-// Endpoints:                           17
+// Endpoints:                           16
 // Async Callback (empty):               1
-// Total number of exported functions:  19
+// Total number of exported functions:  18
 
 #![no_std]
 
@@ -15,6 +15,7 @@ elrond_wasm_node::wasm_endpoints! {
     jex_sc_staking_v2
     (
         configure
+        configureToken
         initRound
         snapshot
         fundRewards
@@ -24,12 +25,10 @@ elrond_wasm_node::wasm_endpoints! {
         getCurrentRound
         getCurrentRoundRewards
         getRewardsForRound
-        snapshot_internal
         getAllAddresses
         getNbAddresses
         getSnapshotTotalBalance
         getSharesOfAddress
-        configureToken
         getTokenThresholds
     )
 }

@@ -14,8 +14,8 @@ pub struct SharesOfAddress<M: ManagedTypeApi> {
 
 #[elrond_wasm::module]
 pub trait SnapshotsModule {
-    #[only_owner]
-    #[endpoint]
+    // owner endpoints
+
     fn snapshot_internal(
         &self,
         round: u32,
@@ -45,6 +45,8 @@ pub trait SnapshotsModule {
         }
     }
 
+    // functions
+
     fn enable_snapshots(&self) {
         self.snapshots_enabled().set(&true);
     }
@@ -60,6 +62,8 @@ pub trait SnapshotsModule {
     fn require_distribution_complete(&self) {
         require!(self.all_addresses().is_empty(), DISTRIB_INCOMPLETE_ERR);
     }
+
+    // storage & views
 
     #[view(getAllAddresses)]
     fn get_all_addresses(&self, from: usize, size: usize) -> MultiValueEncoded<ManagedAddress> {
