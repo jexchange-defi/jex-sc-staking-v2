@@ -46,9 +46,9 @@
             "str:all_addresses.index|address:user2": "2",
             "str:all_addresses.index|address:user3": "3",
             "str:current_round": "*",
-            "str:snapshot_address_balance|address:user1": "10000,000000000000000000",
-            "str:snapshot_address_balance|address:user2": "500,000000000000000000",
-            "str:snapshot_address_balance|address:user3": "3000,000000000000000000",
+            "str:snap_bal|address:user1": "10000,000000000000000000",
+            "str:snap_bal|address:user2": "500,000000000000000000",
+            "str:snap_bal|address:user3": "3000,000000000000000000",
             "str:snapshot_total_balance": "13500,000000000000000000",
             "str:snapshots_enabled": "*",
             "+": "*"

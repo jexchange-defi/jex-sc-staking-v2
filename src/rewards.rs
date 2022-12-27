@@ -150,7 +150,7 @@ pub trait RewardsModule: crate::tokens::TokensModule + crate::snapshots::Snapsho
     #[storage_mapper("team_p_address")]
     fn team_p_address(&self) -> SingleValueMapper<ManagedAddress>;
 
-    #[event("rewards_distribution")]
+    #[event("rewards")]
     fn rewards_distribution_event(
         &self,
         #[indexed] round: u32,

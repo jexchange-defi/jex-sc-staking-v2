@@ -51,11 +51,11 @@
           "storage": {
             "str:all_addresses.len": "0",
             "str:current_round": "3",
-            "str:snapshot_address_balance|address:user1": "",
-            "str:snapshot_address_balance|address:user2": "",
-            "str:snapshot_address_balance|address:user3": "",
-            "str:snapshot_address_balance|address:user4": "",
-            "str:snapshot_address_balance|address:user5": "",
+            "str:snap_bal|address:user1": "",
+            "str:snap_bal|address:user2": "",
+            "str:snap_bal|address:user3": "",
+            "str:snap_bal|address:user4": "",
+            "str:snap_bal|address:user5": "",
             "str:snapshot_total_balance": "10000,000000000000000000",
             "+": "*"
           }

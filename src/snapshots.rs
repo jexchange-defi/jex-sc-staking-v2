@@ -79,7 +79,7 @@ pub trait SnapshotsModule {
         return self.all_addresses().len();
     }
 
-    #[storage_mapper("snapshot_address_balance")]
+    #[storage_mapper("snap_bal")]
     fn snapshot_address_balance(&self, address: &ManagedAddress) -> SingleValueMapper<BigUint>;
 
     #[storage_mapper("snapshots_enabled")]

@@ -168,7 +168,7 @@ TokenAndThreshold {
     threshold: BigUint;
 }
 
-## snapshot_address_balance
+## snap_bal
 
 SingleValueMapper: ManagedAddress -> BigUint
 
