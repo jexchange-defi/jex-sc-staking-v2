@@ -1,5 +1,5 @@
 {
-  "name": "snapshot (disabled)",
+  "name": "prepareRewards (wrong period)",
   "steps": [
     {
       "step": "externalSteps",
@@ -14,30 +14,27 @@
           "code": "file:../output/jex-sc-staking-v2.wasm",
           "owner": "address:owner",
           "storage": {
-            "str:current_state": "1"
+            "str:current_round": "1",
+            "str:current_state": "1",
+            "str:rewards_for_round|u32:1|str:.len": "5"
           }
         }
       }
     },
     {
       "step": "scCall",
-      "txId": "snapshotDisabled",
+      "txId": "prepareRewardsWrongPeriod",
       "tx": {
         "from": "address:owner",
         "to": "sc:staking",
-        "function": "snapshot",
-        "arguments": [
-          "address:user1",
-          "10000,000000000000000000",
-          "address:user2",
-          "0,000000000000000000"
-        ],
+        "function": "prepareRewards",
+        "arguments": [],
         "gasLimit": "10,000,000",
         "gasPrice": "0"
       },
       "expect": {
         "status": "4",
-        "message": "str:Snapshots are disabled",
+        "message": "str:Not in snapshot period",
         "gas": "*",
         "refund": "*"
       }

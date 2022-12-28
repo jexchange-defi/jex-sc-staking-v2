@@ -10,11 +10,9 @@ use rewards::TokenAndBalance;
 elrond_wasm::imports!();
 elrond_wasm::derive_imports!();
 
-static DISTRIBUTION_ALREADY_COMPLETE: &[u8] = b"Distribution already complete";
-static DISTRIB_INCOMPLETE_ERR: &[u8] = b"Distribution is incomplete";
-static REWARDS_ALREADY_PREPARED: &[u8] = b"Rewards already prepared";
-static REWARDS_NOT_PREPARED: &[u8] = b"Rewards are not prepared";
-static SNAPSHOT_NOT_ENABLED_ERR: &[u8] = b"Snapshots are disabled";
+static ERR_NOT_IN_SNAPSHOT_PERIOD: &[u8] = b"Not in snapshot period";
+static ERR_NOT_IN_DISTRIUTION_PERIOD: &[u8] = b"Not in distribution period";
+static ERR_DISTRIBUTION_NOT_COMPLETE: &[u8] = b"Distribution is not complete";
 
 #[derive(TopEncode, TypeAbi)]
 pub struct StakingState {
@@ -83,18 +81,14 @@ pub trait ScStaking:
         &self,
         addresses_and_balances: MultiValueEncoded<MultiValue2<ManagedAddress, BigUint>>,
     ) {
-        require!(
-            self.current_state().get() == RoundState::HoldersSnapshot,
-            SNAPSHOT_NOT_ENABLED_ERR
-        );
-
+        self.require_snapshot_period();
         self.snapshot_internal(self.current_round().get(), addresses_and_balances);
     }
 
     #[payable("*")]
     #[endpoint(fundRewards)]
     fn fund_rewards(&self) {
-        self.require_rewards_not_prepared();
+        self.require_snapshot_period();
 
         self.fund_rewards_internal();
     }
@@ -102,7 +96,7 @@ pub trait ScStaking:
     #[only_owner]
     #[endpoint(prepareRewards)]
     fn prepare_rewards(&self) {
-        self.require_rewards_not_prepared();
+        self.require_snapshot_period();
 
         let current_round = self.current_round().get();
 
@@ -114,13 +108,9 @@ pub trait ScStaking:
     #[only_owner]
     #[endpoint]
     fn distribute(&self, limit: usize) {
-        let state = self.current_state().get();
-        if state == RoundState::Complete {
-            sc_panic!(DISTRIBUTION_ALREADY_COMPLETE);
-        }
         require!(
-            state == RoundState::RewardsDistribution,
-            REWARDS_NOT_PREPARED
+            self.current_state().get() == RoundState::RewardsDistribution,
+            ERR_NOT_IN_DISTRIUTION_PERIOD
         );
 
         let current_round = self.current_round().get();
@@ -136,14 +126,14 @@ pub trait ScStaking:
     fn require_distribution_complete(&self) {
         require!(
             self.current_state().get() == RoundState::Complete,
-            DISTRIB_INCOMPLETE_ERR
+            ERR_DISTRIBUTION_NOT_COMPLETE
         )
     }
 
-    fn require_rewards_not_prepared(&self) {
+    fn require_snapshot_period(&self) {
         require!(
             self.current_state().get() == RoundState::HoldersSnapshot,
-            REWARDS_ALREADY_PREPARED
+            ERR_NOT_IN_SNAPSHOT_PERIOD
         );
     }
 

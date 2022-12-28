@@ -1,5 +1,5 @@
 {
-  "name": "distribute (already complete)",
+  "name": "distribute (wrong period)",
   "steps": [
     {
       "step": "externalSteps",
@@ -15,27 +15,16 @@
           "esdt": {},
           "owner": "address:owner",
           "storage": {
-            "str:all_addresses.len": "0",
+            "str:all_addresses.len": "2",
             "str:current_round": "3",
-            "str:current_state": "2",
-            "str:rewards_for_round|u32:3|str:.len": "2",
-            "str:rewards_for_round|u32:3|str:.item|u32:1": {
-              "1-token": "nested:str:TOKEN-abcdef",
-              "2-nonce": "u64:0",
-              "3-balance": "biguint:30,000000000000000000"
-            },
-            "str:rewards_for_round|u32:3|str:.item|u32:2": {
-              "1-token": "nested:str:WEGLD-aaaaaa",
-              "2-nonce": "u64:0",
-              "3-balance": "biguint:200,000000000000000000"
-            }
+            "str:rewards_for_round|u32:3|str:.len": "0"
           }
         }
       }
     },
     {
       "step": "scCall",
-      "txId": "distributeAlreadyComplete",
+      "txId": "distributeWrongPeriod",
       "tx": {
         "from": "address:owner",
         "to": "sc:staking",
@@ -46,7 +35,7 @@
       },
       "expect": {
         "status": "4",
-        "message": "str:Distribution already complete",
+        "message": "str:Not in distribution period",
         "gas": "*",
         "refund": "*"
       }

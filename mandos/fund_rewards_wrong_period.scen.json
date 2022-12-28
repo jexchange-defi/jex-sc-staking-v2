@@ -1,5 +1,5 @@
 {
-  "name": "fundRewards (already prepared)",
+  "name": "fundRewards (wrong period)",
   "steps": [
     {
       "step": "externalSteps",
@@ -38,7 +38,7 @@
     },
     {
       "step": "scCall",
-      "txId": "fundRewards",
+      "txId": "fundRewardsWrongPeriod",
       "tx": {
         "from": "address:user1",
         "to": "sc:staking",
@@ -59,7 +59,7 @@
       },
       "expect": {
         "status": "4",
-        "message": "str:Rewards already prepared",
+        "message": "str:Not in snapshot period",
         "gas": "*",
         "refund": "*"
       }
