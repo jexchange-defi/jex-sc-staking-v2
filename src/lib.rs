@@ -4,9 +4,6 @@ mod rewards;
 mod snapshots;
 mod tokens;
 
-use elrond_wasm::types::heap::Vec;
-use rewards::TokenAndBalance;
-
 elrond_wasm::imports!();
 elrond_wasm::derive_imports!();
 
@@ -164,16 +161,16 @@ pub trait ScStaking:
     fn get_current_round_rewards(&self) -> MultiValueEncoded<rewards::TokenAndBalance<Self::Api>> {
         let current_round = self.current_round().get();
 
-        let rewards_: Vec<rewards::TokenAndBalance<Self::Api>>;
+        let rewards_: ManagedVec<rewards::TokenAndBalance<Self::Api>>;
         if self.rewards_for_round(current_round).is_empty() {
-            let calculated_rewards = &mut Vec::<rewards::TokenAndBalance<Self::Api>>::new();
-            self.calculate_current_rewards(calculated_rewards);
-            rewards_ = calculated_rewards.to_vec();
+            let mut calculated_rewards =
+                ManagedVec::<Self::Api, rewards::TokenAndBalance<Self::Api>>::new();
+            self.calculate_current_rewards(&mut calculated_rewards);
+            rewards_ = calculated_rewards;
         } else {
             rewards_ = self.rewards_for_round(current_round).iter().collect();
         }
 
-        let result: ManagedVec<Self::Api, TokenAndBalance<Self::Api>> = rewards_.into();
-        return result.into();
+        return rewards_.into();
     }
 }

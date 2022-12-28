@@ -1,8 +1,6 @@
 elrond_wasm::imports!();
 elrond_wasm::derive_imports!();
 
-use elrond_wasm::types::heap::Vec; // TODO get rid of it
-
 #[derive(TopEncode, TypeAbi)]
 pub struct SharesOfAddress<M: ManagedTypeApi> {
     address_balance: BigUint<M>,
@@ -52,9 +50,8 @@ pub trait SnapshotsModule {
     fn get_all_addresses(&self, from: usize, size: usize) -> MultiValueEncoded<ManagedAddress> {
         let all_addresses = self.all_addresses();
         let iter = all_addresses.iter().skip(from);
-        let addresses: Vec<ManagedAddress> = iter.take(size).collect();
-        let managed_addresses: ManagedVec<ManagedAddress> = addresses.into();
-        let result: MultiValueEncoded<ManagedAddress> = managed_addresses.into();
+        let addresses: ManagedVec<ManagedAddress> = iter.take(size).collect();
+        let result: MultiValueEncoded<ManagedAddress> = addresses.into();
         result
     }
 
