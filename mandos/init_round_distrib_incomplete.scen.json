@@ -33,7 +33,7 @@
       },
       "expect": {
         "status": "4",
-        "message": "str:Distribution is incomplete",
+        "message": "str:Distribution is not complete",
         "gas": "*",
         "refund": "*"
       }

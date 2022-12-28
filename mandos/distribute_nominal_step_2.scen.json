@@ -51,6 +51,7 @@
           "storage": {
             "str:all_addresses.len": "0",
             "str:current_round": "3",
+            "str:current_state": "2",
             "str:snap_bal|address:user1": "",
             "str:snap_bal|address:user2": "",
             "str:snap_bal|address:user3": "",

@@ -1,5 +1,5 @@
 {
-  "name": "fundRewards (already prepared)",
+  "name": "fundRewards (wrong period)",
   "steps": [
     {
       "step": "externalSteps",
@@ -18,6 +18,7 @@
           "owner": "address:owner",
           "storage": {
             "str:current_round": "1",
+            "str:current_state": "1",
             "str:rewards_for_round|u32:1|str:.len": "5",
             "str:team_a_address": "address:team_a",
             "str:team_j_address": "address:team_j",
@@ -37,7 +38,7 @@
     },
     {
       "step": "scCall",
-      "txId": "fundRewards",
+      "txId": "fundRewardsWrongPeriod",
       "tx": {
         "from": "address:user1",
         "to": "sc:staking",
@@ -58,7 +59,7 @@
       },
       "expect": {
         "status": "4",
-        "message": "str:Rewards already prepared",
+        "message": "str:Not in snapshot period",
         "gas": "*",
         "refund": "*"
       }

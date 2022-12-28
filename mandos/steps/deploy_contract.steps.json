@@ -44,7 +44,7 @@
           "code": "file:../../output/jex-sc-staking-v2.wasm",
           "storage": {
             "str:current_round": "1",
-            "str:snapshots_enabled": "true"
+            "str:current_state": "0"
           }
         },
         "+": ""

@@ -1,18 +1,12 @@
 elrond_wasm::imports!();
 elrond_wasm::derive_imports!();
 
-use elrond_wasm::types::heap::Vec;
-
 #[derive(Clone, ManagedVecItem, NestedEncode, TopEncode, TopDecode, TypeAbi)]
 pub struct TokenAndBalance<M: ManagedTypeApi> {
     token: TokenIdentifier<M>,
     nonce: u64,
     balance: BigUint<M>,
 }
-
-static DISTRIBUTION_ALREADY_COMPLETE: &[u8] = b"Distribution already complete";
-static REWARDS_ALREADY_PREPARED: &[u8] = b"Rewards already prepared";
-static REWARDS_NOT_PREPARED: &[u8] = b"Rewards are not prepared";
 
 static REWARD_TREASURY_PERCENT: u32 = 30;
 static REWARD_TEAM_A_PERCENT: u32 = 10;
@@ -23,9 +17,7 @@ static REWARD_TEAM_P_PERCENT: u32 = 5;
 pub trait RewardsModule: crate::tokens::TokensModule + crate::snapshots::SnapshotsModule {
     // owner endpoints
 
-    fn fund_rewards_internal(&self, round: u32) {
-        self.require_rewards_not_prepared(round);
-
+    fn fund_rewards_internal(&self) {
         let payments = &self.call_value().all_esdt_transfers();
         for payment in payments {
             self.send().direct_esdt(
@@ -56,25 +48,18 @@ pub trait RewardsModule: crate::tokens::TokensModule + crate::snapshots::Snapsho
     }
 
     fn prepare_rewards_internal(&self, round: u32) {
-        self.require_rewards_not_prepared(round);
-
         let mut rewards = self.rewards_for_round(round);
 
-        let calculated_rewards = &mut Vec::<TokenAndBalance<Self::Api>>::new();
+        let calculated_rewards = &mut ManagedVec::<Self::Api, TokenAndBalance<Self::Api>>::new();
         self.calculate_current_rewards(calculated_rewards);
 
-        for reward in calculated_rewards {
+        for reward in calculated_rewards.iter() {
             rewards.push(&reward);
         }
     }
 
-    fn distribute_rewards_internal(&self, round: u32, limit: usize) {
-        self.require_rewards_prepared(round);
-
-        require!(
-            !self.all_addresses().is_empty(),
-            DISTRIBUTION_ALREADY_COMPLETE
-        );
+    fn distribute_rewards_internal(&self, round: u32, limit: usize) -> bool {
+        let mut distribution_complete = false;
 
         for _ in 0..limit {
             let address = self.all_addresses().get_by_index(1);
@@ -83,14 +68,20 @@ pub trait RewardsModule: crate::tokens::TokensModule + crate::snapshots::Snapsho
             self.all_addresses().swap_remove(&address);
 
             if self.all_addresses().is_empty() {
+                distribution_complete = true;
                 break;
             }
         }
+
+        distribution_complete
     }
 
     // functions
 
-    fn calculate_current_rewards(&self, rewards: &mut Vec<TokenAndBalance<Self::Api>>) {
+    fn calculate_current_rewards(
+        &self,
+        rewards: &mut ManagedVec<Self::Api, TokenAndBalance<Self::Api>>,
+    ) {
         for token_and_threshold in self.token_thresholds().iter() {
             let sc_balance = self.blockchain().get_sc_balance(
                 &EgldOrEsdtTokenIdentifier::esdt(token_and_threshold.token.clone()),
@@ -126,16 +117,6 @@ pub trait RewardsModule: crate::tokens::TokensModule + crate::snapshots::Snapsho
                 &amount_to_send,
             );
         }
-    }
-
-    fn require_rewards_prepared(&self, round: u32) {
-        let rewards = self.rewards_for_round(round);
-        require!(!rewards.is_empty(), REWARDS_NOT_PREPARED);
-    }
-
-    fn require_rewards_not_prepared(&self, round: u32) {
-        let rewards = self.rewards_for_round(round);
-        require!(rewards.is_empty(), REWARDS_ALREADY_PREPARED);
     }
 
     // storage & views

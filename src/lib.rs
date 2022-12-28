@@ -4,17 +4,25 @@ mod rewards;
 mod snapshots;
 mod tokens;
 
-use elrond_wasm::types::heap::Vec;
-use rewards::TokenAndBalance;
-
 elrond_wasm::imports!();
 elrond_wasm::derive_imports!();
+
+static ERR_NOT_IN_SNAPSHOT_PERIOD: &[u8] = b"Not in snapshot period";
+static ERR_NOT_IN_DISTRIUTION_PERIOD: &[u8] = b"Not in distribution period";
+static ERR_DISTRIBUTION_NOT_COMPLETE: &[u8] = b"Distribution is not complete";
 
 #[derive(TopEncode, TypeAbi)]
 pub struct StakingState {
     current_round: u32,
     is_accumulation_period: bool,
     is_distribution_period: bool,
+}
+
+#[derive(PartialEq, TopDecode, TopEncode, TypeAbi)]
+pub enum RoundState {
+    HoldersSnapshot,
+    RewardsDistribution,
+    Complete,
 }
 
 #[elrond_wasm::derive::contract]
@@ -26,7 +34,8 @@ pub trait ScStaking:
     #[init]
     fn init(&self) {
         self.current_round().set_if_empty(1);
-        self.enable_snapshots();
+        self.current_state()
+            .set_if_empty(RoundState::HoldersSnapshot);
     }
 
     // owner endpoints
@@ -60,7 +69,7 @@ pub trait ScStaking:
         self.current_round().update(|x| *x += 1);
 
         self.reset_snapshots();
-        self.enable_snapshots();
+        self.current_state().set(RoundState::HoldersSnapshot);
     }
 
     #[only_owner]
@@ -69,28 +78,60 @@ pub trait ScStaking:
         &self,
         addresses_and_balances: MultiValueEncoded<MultiValue2<ManagedAddress, BigUint>>,
     ) {
+        self.require_snapshot_period();
         self.snapshot_internal(self.current_round().get(), addresses_and_balances);
     }
 
     #[payable("*")]
     #[endpoint(fundRewards)]
     fn fund_rewards(&self) {
-        self.fund_rewards_internal(self.current_round().get());
+        self.require_snapshot_period();
+
+        self.fund_rewards_internal();
     }
 
     #[only_owner]
     #[endpoint(prepareRewards)]
     fn prepare_rewards(&self) {
+        self.require_snapshot_period();
+
         let current_round = self.current_round().get();
+
         self.prepare_rewards_internal(current_round);
-        self.disable_snapshots();
+
+        self.current_state().set(RoundState::RewardsDistribution);
     }
 
     #[only_owner]
     #[endpoint]
     fn distribute(&self, limit: usize) {
+        require!(
+            self.current_state().get() == RoundState::RewardsDistribution,
+            ERR_NOT_IN_DISTRIUTION_PERIOD
+        );
+
         let current_round = self.current_round().get();
-        self.distribute_rewards_internal(current_round, limit);
+
+        let distribution_complete = self.distribute_rewards_internal(current_round, limit);
+        if distribution_complete {
+            self.current_state().set(RoundState::Complete);
+        }
+    }
+
+    // functions
+
+    fn require_distribution_complete(&self) {
+        require!(
+            self.current_state().get() == RoundState::Complete,
+            ERR_DISTRIBUTION_NOT_COMPLETE
+        )
+    }
+
+    fn require_snapshot_period(&self) {
+        require!(
+            self.current_state().get() == RoundState::HoldersSnapshot,
+            ERR_NOT_IN_SNAPSHOT_PERIOD
+        );
     }
 
     // storage & views
@@ -112,20 +153,24 @@ pub trait ScStaking:
     #[storage_mapper("current_round")]
     fn current_round(&self) -> SingleValueMapper<u32>;
 
+    #[view(getCurrentState)]
+    #[storage_mapper("current_state")]
+    fn current_state(&self) -> SingleValueMapper<RoundState>;
+
     #[view(getCurrentRoundRewards)]
     fn get_current_round_rewards(&self) -> MultiValueEncoded<rewards::TokenAndBalance<Self::Api>> {
         let current_round = self.current_round().get();
 
-        let rewards_: Vec<rewards::TokenAndBalance<Self::Api>>;
+        let rewards_: ManagedVec<rewards::TokenAndBalance<Self::Api>>;
         if self.rewards_for_round(current_round).is_empty() {
-            let calculated_rewards = &mut Vec::<rewards::TokenAndBalance<Self::Api>>::new();
-            self.calculate_current_rewards(calculated_rewards);
-            rewards_ = calculated_rewards.to_vec();
+            let mut calculated_rewards =
+                ManagedVec::<Self::Api, rewards::TokenAndBalance<Self::Api>>::new();
+            self.calculate_current_rewards(&mut calculated_rewards);
+            rewards_ = calculated_rewards;
         } else {
             rewards_ = self.rewards_for_round(current_round).iter().collect();
         }
 
-        let result: ManagedVec<Self::Api, TokenAndBalance<Self::Api>> = rewards_.into();
-        return result.into();
+        return rewards_.into();
     }
 }

@@ -1,5 +1,5 @@
 {
-  "name": "prepareRewards (already prepared)",
+  "name": "snapshot (wrong period)",
   "steps": [
     {
       "step": "externalSteps",
@@ -14,26 +14,30 @@
           "code": "file:../output/jex-sc-staking-v2.wasm",
           "owner": "address:owner",
           "storage": {
-            "str:current_round": "1",
-            "str:rewards_for_round|u32:1|str:.len": "5"
+            "str:current_state": "1"
           }
         }
       }
     },
     {
       "step": "scCall",
-      "txId": "prepareRewardsAlreadyPrepared",
+      "txId": "snapshotWrongPeriod",
       "tx": {
         "from": "address:owner",
         "to": "sc:staking",
-        "function": "prepareRewards",
-        "arguments": [],
+        "function": "snapshot",
+        "arguments": [
+          "address:user1",
+          "10000,000000000000000000",
+          "address:user2",
+          "0,000000000000000000"
+        ],
         "gasLimit": "10,000,000",
         "gasPrice": "0"
       },
       "expect": {
         "status": "4",
-        "message": "str:Rewards already prepared",
+        "message": "str:Not in snapshot period",
         "gas": "*",
         "refund": "*"
       }
