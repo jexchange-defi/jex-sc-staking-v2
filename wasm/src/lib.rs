@@ -5,9 +5,9 @@
 ////////////////////////////////////////////////////
 
 // Init:                                 1
-// Endpoints:                           16
+// Endpoints:                           17
 // Async Callback (empty):               1
-// Total number of exported functions:  18
+// Total number of exported functions:  19
 
 #![no_std]
 
@@ -23,6 +23,7 @@ elrond_wasm_node::wasm_endpoints! {
         distribute
         getState
         getCurrentRound
+        getCurrentState
         getCurrentRoundRewards
         getRewardsForRound
         getAllAddresses

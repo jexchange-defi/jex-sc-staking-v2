@@ -10,11 +10,24 @@ use rewards::TokenAndBalance;
 elrond_wasm::imports!();
 elrond_wasm::derive_imports!();
 
+static DISTRIBUTION_ALREADY_COMPLETE: &[u8] = b"Distribution already complete";
+static DISTRIB_INCOMPLETE_ERR: &[u8] = b"Distribution is incomplete";
+static REWARDS_ALREADY_PREPARED: &[u8] = b"Rewards already prepared";
+static REWARDS_NOT_PREPARED: &[u8] = b"Rewards are not prepared";
+static SNAPSHOT_NOT_ENABLED_ERR: &[u8] = b"Snapshots are disabled";
+
 #[derive(TopEncode, TypeAbi)]
 pub struct StakingState {
     current_round: u32,
     is_accumulation_period: bool,
     is_distribution_period: bool,
+}
+
+#[derive(PartialEq, TopDecode, TopEncode, TypeAbi)]
+pub enum RoundState {
+    HoldersSnapshot,
+    RewardsDistribution,
+    Complete,
 }
 
 #[elrond_wasm::derive::contract]
@@ -26,7 +39,8 @@ pub trait ScStaking:
     #[init]
     fn init(&self) {
         self.current_round().set_if_empty(1);
-        self.enable_snapshots();
+        self.current_state()
+            .set_if_empty(RoundState::HoldersSnapshot);
     }
 
     // owner endpoints
@@ -60,7 +74,7 @@ pub trait ScStaking:
         self.current_round().update(|x| *x += 1);
 
         self.reset_snapshots();
-        self.enable_snapshots();
+        self.current_state().set(RoundState::HoldersSnapshot);
     }
 
     #[only_owner]
@@ -69,28 +83,68 @@ pub trait ScStaking:
         &self,
         addresses_and_balances: MultiValueEncoded<MultiValue2<ManagedAddress, BigUint>>,
     ) {
+        require!(
+            self.current_state().get() == RoundState::HoldersSnapshot,
+            SNAPSHOT_NOT_ENABLED_ERR
+        );
+
         self.snapshot_internal(self.current_round().get(), addresses_and_balances);
     }
 
     #[payable("*")]
     #[endpoint(fundRewards)]
     fn fund_rewards(&self) {
-        self.fund_rewards_internal(self.current_round().get());
+        self.require_rewards_not_prepared();
+
+        self.fund_rewards_internal();
     }
 
     #[only_owner]
     #[endpoint(prepareRewards)]
     fn prepare_rewards(&self) {
+        self.require_rewards_not_prepared();
+
         let current_round = self.current_round().get();
+
         self.prepare_rewards_internal(current_round);
-        self.disable_snapshots();
+
+        self.current_state().set(RoundState::RewardsDistribution);
     }
 
     #[only_owner]
     #[endpoint]
     fn distribute(&self, limit: usize) {
+        let state = self.current_state().get();
+        if state == RoundState::Complete {
+            sc_panic!(DISTRIBUTION_ALREADY_COMPLETE);
+        }
+        require!(
+            state == RoundState::RewardsDistribution,
+            REWARDS_NOT_PREPARED
+        );
+
         let current_round = self.current_round().get();
-        self.distribute_rewards_internal(current_round, limit);
+
+        let distribution_complete = self.distribute_rewards_internal(current_round, limit);
+        if distribution_complete {
+            self.current_state().set(RoundState::Complete);
+        }
+    }
+
+    // functions
+
+    fn require_distribution_complete(&self) {
+        require!(
+            self.current_state().get() == RoundState::Complete,
+            DISTRIB_INCOMPLETE_ERR
+        )
+    }
+
+    fn require_rewards_not_prepared(&self) {
+        require!(
+            self.current_state().get() == RoundState::HoldersSnapshot,
+            REWARDS_ALREADY_PREPARED
+        );
     }
 
     // storage & views
@@ -111,6 +165,10 @@ pub trait ScStaking:
     #[view(getCurrentRound)]
     #[storage_mapper("current_round")]
     fn current_round(&self) -> SingleValueMapper<u32>;
+
+    #[view(getCurrentState)]
+    #[storage_mapper("current_state")]
+    fn current_state(&self) -> SingleValueMapper<RoundState>;
 
     #[view(getCurrentRoundRewards)]
     fn get_current_round_rewards(&self) -> MultiValueEncoded<rewards::TokenAndBalance<Self::Api>> {

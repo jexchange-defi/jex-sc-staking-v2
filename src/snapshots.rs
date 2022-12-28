@@ -1,10 +1,7 @@
 elrond_wasm::imports!();
 elrond_wasm::derive_imports!();
 
-use elrond_wasm::types::heap::Vec;
-
-static DISTRIB_INCOMPLETE_ERR: &[u8] = b"Distribution is incomplete";
-static SNAPSHOT_NOT_ENABLED_ERR: &[u8] = b"Snapshots are disabled";
+use elrond_wasm::types::heap::Vec; // TODO get rid of it
 
 #[derive(TopEncode, TypeAbi)]
 pub struct SharesOfAddress<M: ManagedTypeApi> {
@@ -21,8 +18,6 @@ pub trait SnapshotsModule {
         round: u32,
         addresses_and_balances: MultiValueEncoded<MultiValue2<ManagedAddress, BigUint>>,
     ) {
-        require!(self.snapshots_enabled().get(), SNAPSHOT_NOT_ENABLED_ERR);
-
         for address_and_balance in addresses_and_balances {
             let (address, balance) = address_and_balance.clone().into_tuple();
 
@@ -47,20 +42,8 @@ pub trait SnapshotsModule {
 
     // functions
 
-    fn enable_snapshots(&self) {
-        self.snapshots_enabled().set(&true);
-    }
-
-    fn disable_snapshots(&self) {
-        self.snapshots_enabled().set(&false);
-    }
-
     fn reset_snapshots(&self) {
         self.snapshot_total_balance().set(&BigUint::zero());
-    }
-
-    fn require_distribution_complete(&self) {
-        require!(self.all_addresses().is_empty(), DISTRIB_INCOMPLETE_ERR);
     }
 
     // storage & views
@@ -85,9 +68,6 @@ pub trait SnapshotsModule {
 
     #[storage_mapper("snap_bal")]
     fn snapshot_address_balance(&self, address: &ManagedAddress) -> SingleValueMapper<BigUint>;
-
-    #[storage_mapper("snapshots_enabled")]
-    fn snapshots_enabled(&self) -> SingleValueMapper<bool>;
 
     #[view(getSnapshotTotalBalance)]
     #[storage_mapper("snapshot_total_balance")]

@@ -14,7 +14,7 @@
           "code": "file:../output/jex-sc-staking-v2.wasm",
           "owner": "address:owner",
           "storage": {
-            "str:snapshots_enabled": "false"
+            "str:current_state": "1"
           }
         }
       }
