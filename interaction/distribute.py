@@ -42,7 +42,11 @@ def _distribute(proxy: ElrondProxy, network: NetworkConfig, user: Account, sc_ad
         logging.info(f"Transaction: {tx_hash}")
     else:
         tx: TransactionOnNetwork = transaction.send_wait_result(proxy, 60)
-        logging.info(f"Transaction: {tx.hash} - status {tx.raw['status']}")
+        if tx.is_done():
+            status = tx.raw['status']
+        else:
+            status = 'Unknown'
+        logging.info(f"Transaction: {tx.hash} - status {status}")
 
 
 if __name__ == '__main__':

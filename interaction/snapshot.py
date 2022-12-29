@@ -5,7 +5,7 @@ import logging
 
 import requests
 from erdpy.accounts import Account, Address
-from erdpy.proxy.core import ElrondProxy
+from erdpy.proxy.core import ElrondProxy, NetworkConfig
 from erdpy.proxy.messages import TransactionOnNetwork
 from erdpy.transactions import Transaction
 from more_itertools import grouper
@@ -99,7 +99,7 @@ def _export_holders(api_url: str, token_identifier: str, min_amount: int):
     LOG.info(f'Total {token_identifier} held: {int(total_hbal):,}')
 
 
-def _register_holders(proxy, network, sc_address, holders):
+def _register_holders(proxy: ElrondProxy, network: NetworkConfig, sc_address, holders):
     LOG.info('Register holders chunk')
 
     gas_limit = GAS_LIMIT_BASE
@@ -129,9 +129,12 @@ def _register_holders(proxy, network, sc_address, holders):
     user.nonce += 1
 
     tx: TransactionOnNetwork = transaction.send_wait_result(proxy, 60)
-    logging.info(f"Transaction: {tx.hash}")
+    logging.info(f"Transaction: {tx.get_hash()}")
 
-    status = tx.raw['status']
+    if tx.is_done():
+        status = tx.raw['status']
+    else:
+        status = 'Unknown'
     _report_add(processed_holders, status)
 
 

@@ -22,7 +22,7 @@ configure() {
     # erd155xlkeyqatck0qay99qk7qwerxc0efergug9k588uql4efm7yhwqqwkcsq
     read -p "Team P address: " TEAM_P_ADDRESS
     TEAM_P_ADDRESS="0x$(erdpy wallet bech32 --decode ${TEAM_P_ADDRESS})"
-    erdpy --verbose contract call ${SC_ADDRESS} --recall-nonce --keyfile=${KEYFILE} --gas-limit=4000000 \
+    erdpy --verbose contract call ${SC_ADDRESS} --recall-nonce --keyfile=${KEYFILE} --gas-limit=6000000 \
         --function="configure" \
         --arguments ${TREASURY_ADDRESS} ${TEAM_A_ADDRESS} ${TEAM_J_ADDRESS} ${TEAM_P_ADDRESS} \
         --proxy=${PROXY} --chain=${CHAIN} --send || return
