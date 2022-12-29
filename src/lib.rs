@@ -14,11 +14,10 @@ static ERR_DISTRIBUTION_NOT_COMPLETE: &[u8] = b"Distribution is not complete";
 #[derive(TopEncode, TypeAbi)]
 pub struct StakingState {
     current_round: u32,
-    is_accumulation_period: bool,
-    is_distribution_period: bool,
+    round_state: RoundState,
 }
 
-#[derive(PartialEq, TopDecode, TopEncode, TypeAbi)]
+#[derive(PartialEq, NestedEncode, TopDecode, TopEncode, TypeAbi)]
 pub enum RoundState {
     HoldersSnapshot,
     RewardsDistribution,
@@ -139,12 +138,9 @@ pub trait ScStaking:
     #[view(getState)]
     fn state(&self) -> StakingState {
         let round = self.current_round().get();
-        let accumulation = self.rewards_for_round(round).is_empty();
-        let distribution = !accumulation && !self.all_addresses().is_empty();
         let state = StakingState {
             current_round: round,
-            is_accumulation_period: accumulation,
-            is_distribution_period: distribution,
+            round_state: self.current_state().get(),
         };
         return state;
     }

@@ -113,7 +113,10 @@ Return the current staking round (integer)
 
 ## getState
 
-Return the current state of staking (Accumulation or Distribution)
+Return the current state of staking :
+
+* round_number: u32
+* round_state: 0 = HoldersSnapshot, 1 = RewardsDistribution, 2 = Complete
 
 ## getCurrentRoundRewards
 

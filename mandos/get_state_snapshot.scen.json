@@ -1,5 +1,5 @@
 {
-  "name": "getState (accumulation)",
+  "name": "getState (snapshot)",
   "steps": [
     {
       "step": "externalSteps",
@@ -15,11 +15,8 @@
           "esdt": {},
           "owner": "address:owner",
           "storage": {
-            "str:all_addresses.len": "3",
-            "str:all_addresses.item|u32:1": "address:user1",
-            "str:all_addresses.item|u32:2": "address:user2",
-            "str:all_addresses.item|u32:3": "address:user3",
-            "str:current_round": "3"
+            "str:current_round": "3",
+            "str:current_state": "0"
           }
         }
       }
@@ -35,8 +32,7 @@
         "out": [
           {
             "1-round": "u32:3",
-            "2-accumulation": "0x01",
-            "3-distribution": "0x00"
+            "2-round_state": "0x00"
           }
         ],
         "status": "",
