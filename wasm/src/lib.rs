@@ -17,10 +17,10 @@ elrond_wasm_node::wasm_endpoints! {
         configure
         configureToken
         initRound
-        snapshot
+        snapshotHolders
         fundRewards
         prepareRewards
-        distribute
+        distributeRewards
         getState
         getCurrentRound
         getCurrentState

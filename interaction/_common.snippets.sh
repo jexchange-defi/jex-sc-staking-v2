@@ -41,12 +41,12 @@ configureToken() {
         --proxy=${PROXY} --chain=${CHAIN} --send || return
 }
 
-distribute() {
+distributeRewards() {
     read -p "Limit (decimal): " LIMIT
     GAS_LIMIT=$((5000000 * LIMIT))
 
     erdpy --verbose contract call ${SC_ADDRESS} --recall-nonce --keyfile=${KEYFILE} --gas-limit=${GAS_LIMIT} \
-        --function="distribute" \
+        --function="distributeRewards" \
         --arguments "${LIMIT}" \
         --proxy=${PROXY} --chain=${CHAIN} --send || return
 }

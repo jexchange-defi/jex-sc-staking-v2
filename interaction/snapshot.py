@@ -103,7 +103,7 @@ def _register_holders(proxy, network, sc_address, holders):
     LOG.info('Register holders chunk')
 
     gas_limit = GAS_LIMIT_BASE
-    data = 'snapshot'
+    data = 'snapshotHolders'
     processed_holders = []
     for holder in holders:
         LOG.info(holder['address'])

@@ -72,8 +72,8 @@ pub trait ScStaking:
     }
 
     #[only_owner]
-    #[endpoint]
-    fn snapshot(
+    #[endpoint(snapshotHolders)]
+    fn snapshot_holders(
         &self,
         addresses_and_balances: MultiValueEncoded<MultiValue2<ManagedAddress, BigUint>>,
     ) {
@@ -102,8 +102,8 @@ pub trait ScStaking:
     }
 
     #[only_owner]
-    #[endpoint]
-    fn distribute(&self, limit: usize) {
+    #[endpoint(distributeRewards)]
+    fn distribute_rewards(&self, limit: usize) {
         require!(
             self.current_state().get() == RoundState::RewardsDistribution,
             ERR_NOT_IN_DISTRIUTION_PERIOD

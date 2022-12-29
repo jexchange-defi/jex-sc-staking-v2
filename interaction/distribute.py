@@ -20,7 +20,7 @@ def _distribute(proxy: ElrondProxy, network: NetworkConfig, user: Account, sc_ad
     LOG.info('Distribute rewards')
 
     gas_limit = GAS_LIMIT_BASE + limit * GAS_LIMIT_PER_ADDRESS
-    data = 'distribute'
+    data = 'distributeRewards'
     data += f'@{ensure_even_length(hex(limit)[2:])}'
 
     LOG.debug(f'data={data}')

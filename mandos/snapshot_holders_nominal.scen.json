@@ -1,5 +1,5 @@
 {
-  "name": "snapshot (nominal)",
+  "name": "snapshot holders (nominal)",
   "steps": [
     {
       "step": "externalSteps",
@@ -7,11 +7,11 @@
     },
     {
       "step": "scCall",
-      "txId": "snapshotNominal",
+      "txId": "snapshotHoldersNominal",
       "tx": {
         "from": "address:owner",
         "to": "sc:staking",
-        "function": "snapshot",
+        "function": "snapshotHolders",
         "arguments": [
           "address:user1",
           "10000,000000000000000000",
