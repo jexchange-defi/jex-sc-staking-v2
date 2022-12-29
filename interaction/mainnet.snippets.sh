@@ -1,5 +1,5 @@
 PROJECT=..
-KEYFILE="../wallets/deployer.json"
+KEYFILE="../../wallets/deployer.json"
 PROXY=https://gateway.elrond.com
 SC_ADDRESS=$(erdpy data load --key=address-mainnet)
 CHAIN=1
