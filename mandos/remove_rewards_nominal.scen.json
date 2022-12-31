@@ -1,0 +1,73 @@
+{
+  "name": "removeRewards (nominal)",
+  "steps": [
+    {
+      "step": "externalSteps",
+      "path": "init.scen.json"
+    },
+    {
+      "step": "setState",
+      "accounts": {
+        "address:fees": {
+          "nonce": "0",
+          "balance": "0"
+        },
+        "sc:staking": {
+          "nonce": "0",
+          "balance": "0",
+          "code": "file:../output/jex-sc-staking-v2.wasm",
+          "esdt": {
+            "str:JEX-000000": "10000,000000000000000000"
+          },
+          "owner": "address:owner",
+          "storage": {
+            "str:current_round": "1",
+            "str:current_state": "0"
+          }
+        }
+      }
+    },
+    {
+      "step": "scCall",
+      "txId": "removeRewardsNominal",
+      "tx": {
+        "from": "address:owner",
+        "to": "sc:staking",
+        "function": "removeRewards",
+        "arguments": ["str:JEX-000000", "0", "address:fees"],
+        "gasLimit": "5,000,000",
+        "gasPrice": "0"
+      },
+      "expect": {
+        "status": "0",
+        "message": "",
+        "gas": "*",
+        "refund": "*"
+      }
+    },
+    {
+      "step": "checkState",
+      "accounts": {
+        "address:fees": {
+          "nonce": "*",
+          "balance": "*",
+          "esdt": {
+            "str:JEX-000000": "10000,000000000000000000"
+          }
+        },
+        "sc:staking": {
+          "nonce": "0",
+          "balance": "0",
+          "code": "*",
+          "esdt": {
+            "str:JEX-000000": ""
+          },
+          "storage": {
+            "+": ""
+          }
+        },
+        "+": ""
+      }
+    }
+  ]
+}

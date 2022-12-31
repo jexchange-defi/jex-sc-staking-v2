@@ -1,0 +1,27 @@
+{
+  "name": "removeRewards (not owner)",
+  "steps": [
+    {
+      "step": "externalSteps",
+      "path": "init.scen.json"
+    },
+    {
+      "step": "scCall",
+      "txId": "removeRewardsNotOwner",
+      "tx": {
+        "from": "address:user1",
+        "to": "sc:staking",
+        "function": "removeRewards",
+        "arguments": ["str:JEX-000000", "0", "address:fees"],
+        "gasLimit": "5,000,000",
+        "gasPrice": "0"
+      },
+      "expect": {
+        "status": "4",
+        "message": "str:Endpoint can only be called by owner",
+        "gas": "*",
+        "refund": "*"
+      }
+    }
+  ]
+}
