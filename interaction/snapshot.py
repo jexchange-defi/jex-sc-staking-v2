@@ -2,6 +2,7 @@ import argparse
 import datetime
 import getpass
 import logging
+from itertools import chain
 
 import requests
 from erdpy.accounts import Account, Address
@@ -33,6 +34,7 @@ REPORT_FILENAME = '.report.txt'
 SNAPSHOT_CHUNK_SIZE = 100
 GAS_LIMIT_BASE = 10_000_000
 GAS_LIMIT_PER_ADDRESS = 1_500_000
+NFT_HOLDING_JEX_EQIV = 100_000
 
 
 def _is_valid_holder(address: str) -> bool:
@@ -55,49 +57,79 @@ def _fetch_token_info(api_url: str, token_identifier: str):
     }
 
 
+def _fetch_jex_token_holders(api_url: str, token_identifier: str):
+    from_ = 0
+    size = 1000
+    while True:
+        url = f'{api_url}/tokens/{token_identifier}/accounts?from={from_}&size={size}'
+        LOG.info(url)
+        resp = requests.get(url)
+
+        if resp.status_code >= 204:
+            return
+
+        if resp.status_code == 200:
+            json_ = resp.json()
+            if len(json_) == 0:
+                return
+            for holder in json_:
+                yield holder
+
+        from_ += size
+
+
+def _fetch_rolling_ballz_holders(api_url: str, jex_token_decimals: int):
+    from_ = 0
+    size_ = 50
+    while True:
+        url = f'{api_url}/nfts/JAVIERD-47e517-15/accounts?from={from_}&size={size_}'
+        LOG.info(url)
+        response = requests.get(url)
+
+        if response.status_code >= 204:
+            return
+
+        if response.status_code == 200:
+            json_ = response.json()
+            if len(json_) == 0:
+                return
+            for holder in json_:
+                holder['balance'] = int(holder['balance']) * NFT_HOLDING_JEX_EQIV * \
+                    10**jex_token_decimals
+                yield holder
+        from_ += size_
+
+
 def _export_holders(api_url: str, token_identifier: str, min_amount: int):
     LOG.info(f'Export holders of {token_identifier}')
 
     token_info = _fetch_token_info(api_url, token_identifier)
     token_decimals = token_info['decimals']
 
-    from_ = 0
-    size = 100
     nb = 0
     total_hbal = 0
 
     with open(HOLDERS_FILENAME, 'wt') as out:
-        while True:
-            resp = requests.get(
-                f'{api_url}/tokens/{token_identifier}/accounts?from={from_}&size={size}')
 
-            if resp.status_code >= 204:
-                return
+        jex_holders = _fetch_jex_token_holders(api_url, token_identifier)
+        jex_ballz_holders = _fetch_rolling_ballz_holders(
+            api_url, token_decimals)
 
-            json_ = resp.json()
-            if len(json_) == 0:
-                break
+        all_holders = chain(jex_holders, jex_ballz_holders)
+        all_holders = filter(
+            lambda x: _is_valid_holder(x['address']), all_holders)
+        all_holders = filter(lambda x: int(
+            x['balance']) / 10**token_decimals >= min_amount, all_holders)
 
-            holders = json_
-            holders = filter(lambda x: _is_valid_holder(x['address']), holders)
-            holders = filter(lambda x: int(
-                x['balance']) / 10**token_decimals >= min_amount, holders)
-            holders = list(holders)
-
-            if len(holders) == 0:
-                break
-
-            for holder in holders:
-                nb += 1
-                bal = int(holder['balance'])
-                hbal = int(bal / 10**token_decimals)
-                line = f"{nb};{holder['address']};{bal};{hbal};"
-                print(line)
-                out.write(line)
-                out.write("\n")
-                total_hbal += hbal
-
-            from_ += size
+        for holder in all_holders:
+            nb += 1
+            bal = int(holder['balance'])
+            hbal = int(bal / 10**token_decimals)
+            line = f"{nb};{holder['address']};{bal};{hbal};"
+            print(line)
+            out.write(line)
+            out.write("\n")
+            total_hbal += hbal
 
     LOG.info(f'Total {token_identifier} held: {int(total_hbal):,}')
 
