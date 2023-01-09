@@ -1,5 +1,5 @@
 PROJECT=..
-KEYFILE="../../wallets/deployer.json"
+KEYFILE="../../wallets/deployer-deprecated.json"
 PROXY=https://devnet-gateway.elrond.com
 SC_ADDRESS=$(erdpy data load --key=address-devnet)
 CHAIN=D

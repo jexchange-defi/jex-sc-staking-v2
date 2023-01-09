@@ -65,6 +65,18 @@ Initialize a new round.
 
 Fail if snapshots are present.
 
+## removeRewards
+
+Remove the given rewards from staking contract (ie send tokens to a given address).
+
+Possible only during the snapshot period.
+
+Parameters:
+
+* token_identifier: token identifier
+* nonce: token nonce
+* receiver: address where to send the tokens
+
 ## snapshot
 
 Add a list of addresses + their snapshot balance.
