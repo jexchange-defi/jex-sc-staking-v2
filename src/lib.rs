@@ -117,6 +117,19 @@ pub trait ScStaking:
         }
     }
 
+    #[only_owner]
+    #[endpoint(removeRewards)]
+    fn remove_rewards(
+        &self,
+        token_identifier: TokenIdentifier,
+        token_nonce: u64,
+        receiver: ManagedAddress,
+    ) {
+        self.require_snapshot_period();
+
+        self.remove_rewards_internal(&token_identifier, token_nonce, &receiver);
+    }
+
     // functions
 
     fn require_distribution_complete(&self) {

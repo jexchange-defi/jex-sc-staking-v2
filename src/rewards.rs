@@ -76,6 +76,21 @@ pub trait RewardsModule: crate::tokens::TokensModule + crate::snapshots::Snapsho
         distribution_complete
     }
 
+    fn remove_rewards_internal(
+        &self,
+        token_identifier: &TokenIdentifier,
+        token_nonce: u64,
+        receiver: &ManagedAddress,
+    ) {
+        let balance = self.blockchain().get_sc_balance(
+            &EgldOrEsdtTokenIdentifier::esdt(token_identifier.clone()),
+            token_nonce,
+        );
+
+        self.send()
+            .direct_esdt(receiver, token_identifier, token_nonce, &balance);
+    }
+
     // functions
 
     fn calculate_current_rewards(

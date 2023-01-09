@@ -63,6 +63,20 @@ prepareRewards() {
         --proxy=${PROXY} --chain=${CHAIN} --send || return
 }
 
+removeRewards() {
+    read -p "Token identifier: " TOKEN_IDENTIFIER
+    read -p "Token nonce (decimal): " TOKEN_NONCE
+    read -p "Address: " RECEIVER
+
+    TOKEN_IDENTIFIER="0x$(echo -n "${TOKEN_IDENTIFIER}" | xxd -ps)"
+    RECEIVER="0x$(erdpy wallet bech32 --decode ${RECEIVER})"
+
+    erdpy contract call ${SC_ADDRESS} --recall-nonce --keyfile=${KEYFILE} --gas-limit=5000000 \
+        --function="removeRewards" \
+        --arguments "${TOKEN_IDENTIFIER}" "${TOKEN_NONCE}" "${RECEIVER}" \
+        --proxy=${PROXY} --chain=${CHAIN} --send || return
+}
+
 snapshot() {
     read -p "Address: " ADDRESS
     ADDRESS="0x$(erdpy wallet bech32 --decode ${ADDRESS})"

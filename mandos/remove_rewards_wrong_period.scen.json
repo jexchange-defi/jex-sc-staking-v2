@@ -1,0 +1,42 @@
+{
+  "name": "removeRewards (wrong period)",
+  "steps": [
+    {
+      "step": "externalSteps",
+      "path": "init.scen.json"
+    },
+    {
+      "step": "setState",
+      "accounts": {
+        "sc:staking": {
+          "nonce": "0",
+          "balance": "0",
+          "code": "file:../output/jex-sc-staking-v2.wasm",
+          "owner": "address:owner",
+          "storage": {
+            "str:current_round": "1",
+            "str:current_state": "1"
+          }
+        }
+      }
+    },
+    {
+      "step": "scCall",
+      "txId": "removeRewardsWrongPeriod",
+      "tx": {
+        "from": "address:owner",
+        "to": "sc:staking",
+        "function": "removeRewards",
+        "arguments": ["str:JEX-000000", "0", "address:fees"],
+        "gasLimit": "5,000,000",
+        "gasPrice": "0"
+      },
+      "expect": {
+        "status": "4",
+        "message": "str:Not in snapshot period",
+        "gas": "*",
+        "refund": "*"
+      }
+    }
+  ]
+}
