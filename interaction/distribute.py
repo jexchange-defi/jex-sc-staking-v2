@@ -13,7 +13,7 @@ logging.basicConfig(level=logging.INFO)
 LOG = logging.getLogger()
 
 GAS_LIMIT_BASE = 10_000_000
-GAS_LIMIT_PER_ADDRESS = 2_000_000
+GAS_LIMIT_PER_ADDRESS = 4_000_000  # for 7 tokens
 
 
 def _distribute(proxy: ElrondProxy, network: NetworkConfig, user: Account, sc_address: str, limit: int, no_wait: False):
