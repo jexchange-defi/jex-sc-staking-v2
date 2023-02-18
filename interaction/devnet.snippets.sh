@@ -1,6 +1,6 @@
 PROJECT=..
 KEYFILE="../../wallets/deployer-deprecated.json"
-PROXY=https://devnet-gateway.elrond.com
+PROXY=https://devnet-gateway.multiversx.com
 SC_ADDRESS=$(erdpy data load --key=address-devnet)
 CHAIN=D
 JEX_TOKEN_ID="0x$(echo -n "XJEX-899465" | xxd -ps)"

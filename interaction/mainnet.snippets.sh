@@ -1,6 +1,6 @@
 PROJECT=..
 KEYFILE="../../wallets/deployer.json"
-PROXY=https://gateway.elrond.com
+PROXY=https://gateway.multiversx.com
 SC_ADDRESS=$(erdpy data load --key=address-mainnet)
 CHAIN=1
 JEX_TOKEN_ID="0x$(echo -n "JEX-9040ca" | xxd -ps)"
