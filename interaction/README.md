@@ -62,7 +62,10 @@ Example:
 ```shell
 # Export holders of at least 10K JEX on mainnet
 
-python snapshot.py --api_url https://api.elrond.com --token_identifier JEX-9040ca --min_amount 10000
+python snapshot.py --api_url https://api.multiversx.com \
+    --gateway_utl https://gateway.multiversx.com \
+    --token_identifier JEX-9040ca \
+    --min_amount 10000
 ```
 
 The list of holders with the minimum required amount of tokens is exported in `.holders.csv` file.
@@ -74,7 +77,7 @@ Example:
 ```shell
 # Import the previously generated snapshot in the SC on mainnet
 
-python snapshot.py --gateway_url https://gateway.elrond.com \
+python snapshot.py --gateway_url https://gateway.multiversx.com \
     --keyfile ../wallets/operator.json \
     --sc_address erd1qqqqqqqqqqqqqxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx \
     register_holders
@@ -122,7 +125,7 @@ Example:
 ```shell
 # Example to distribute rewards to 100 holders
 
-python distribute.py --gateway_url https://gateway.elrond.com \
+python distribute.py --gateway_url https://gateway.multiversx.com \
     --keyfile ../wallets/operator.json \
     --sc_address erd1qqqqqqqqqqqqqxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx \
     100

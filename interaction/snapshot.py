@@ -2,15 +2,17 @@ import argparse
 import datetime
 import getpass
 import logging
+import os
 from itertools import chain
 
 import requests
 from erdpy.accounts import Account, Address
+from erdpy.contracts import SmartContract
 from erdpy.proxy.core import ElrondProxy, NetworkConfig
 from erdpy.proxy.messages import TransactionOnNetwork
 from erdpy.transactions import Transaction
 from more_itertools import grouper
-from utils import ensure_even_length
+from utils import ensure_even_length, hex2dec
 
 logging.basicConfig(level=logging.INFO)
 LOG = logging.getLogger()
@@ -35,6 +37,7 @@ SNAPSHOT_CHUNK_SIZE = 100
 GAS_LIMIT_BASE = 10_000_000
 GAS_LIMIT_PER_ADDRESS = 1_500_000
 NFT_HOLDING_JEX_EQIV = 100_000
+STABLEPOOL_JEX_EQIV = 50_000
 
 
 def _is_valid_holder(address: str) -> bool:
@@ -100,7 +103,36 @@ def _fetch_rolling_ballz_holders(api_url: str, jex_token_decimals: int):
         from_ += size_
 
 
-def _export_holders(api_url: str, token_identifier: str, min_amount: int):
+def _fetch_stablepool_owners(proxy: ElrondProxy, jex_token_decimals: int):
+
+    sc = SmartContract(
+        'erd1qqqqqqqqqqqqqpgqqze29sursxjz76dyczaj7y0g85mfvccv73eq4fn3kq')
+    resp = sc.query(proxy, 'getAllMetaPools', [0, 100])
+
+    def _parse_meta_pool(hex_: str):
+        idx = 0
+
+        id_ = hex2dec(hex_[idx:idx + 8])
+        idx += 8
+
+        nb_pools = hex2dec(hex_[idx:idx + 8])
+        idx += 8
+
+        idx += nb_pools * 8  # skip pool IDs
+
+        address_hex = hex_[idx: idx+64]
+        address = Address(address_hex)
+
+        return {
+            'address': address.bech32(),
+            'balance': STABLEPOOL_JEX_EQIV * 10**jex_token_decimals
+        }
+
+    owners = list(map(lambda x: _parse_meta_pool(x.hex), resp))
+    return owners
+
+
+def _export_holders(api_url: str, proxy: ElrondProxy, token_identifier: str, min_amount: int):
     LOG.info(f'Export holders of {token_identifier}')
 
     token_info = _fetch_token_info(api_url, token_identifier)
@@ -114,8 +146,11 @@ def _export_holders(api_url: str, token_identifier: str, min_amount: int):
         jex_holders = _fetch_jex_token_holders(api_url, token_identifier)
         jex_ballz_holders = _fetch_rolling_ballz_holders(
             api_url, token_decimals)
+        jex_stablepool_owners = _fetch_stablepool_owners(
+            proxy, token_decimals)
 
-        all_holders = chain(jex_holders, jex_ballz_holders)
+        all_holders = chain(jex_holders, jex_ballz_holders,
+                            jex_stablepool_owners)
         all_holders = filter(
             lambda x: _is_valid_holder(x['address']), all_holders)
         all_holders = filter(lambda x: int(
@@ -229,12 +264,12 @@ if __name__ == '__main__':
                         help='(mandatory for "export_holders" action)')
     parser.add_argument('--min_amount', type=int,
                         help='minimum amount of tokens to hold (mandatory for "export_holders" action)')
+    parser.add_argument('--gateway_url', type=str, required=True,
+                        help='Elrond gateway')
     parser.add_argument('--sc_address', type=str,
                         help='Staking smart contract address (mandatory for "register_holders" action)')
     parser.add_argument('--keyfile', type=str,
                         help='User key file (mandatory for "register_holders" action)')
-    parser.add_argument('--gateway_url', type=str,
-                        help='Elrond gateway (mandatory for "register_holders" action)')
     parser.add_argument('action', type=str,
                         help='"export_holders" or "register_holders"')
 
@@ -242,19 +277,20 @@ if __name__ == '__main__':
     if args.debug:
         LOG.setLevel(logging.DEBUG)
 
+    proxy = ElrondProxy(args.gateway_url)
+
     if args.action == 'export_holders':
         assert args.api_url is not None, '--api_url is mandatory for "export_holders action"'
         assert args.token_identifier is not None, '--token_identifier is mandatory for "export_holders action"'
         assert args.min_amount is not None, '--min_amount is mandatory for "export_holders action"'
-        _export_holders(args.api_url, args.token_identifier, args.min_amount)
+        _export_holders(args.api_url, proxy,
+                        args.token_identifier, args.min_amount)
 
     if args.action == 'register_holders':
         assert args.sc_address is not None, '--sc_address is mandatory for "register_holders" action"'
-        assert args.gateway_url is not None, '--gateway_url is mandatory for "register_holders" action"'
         assert args.keyfile is not None, '--keyfile is mandatory for "register_holders" action"'
 
         password = getpass.getpass(prompt='Keyfile password: ')
 
-        proxy = ElrondProxy(args.gateway_url)
         user = Account(key_file=args.keyfile, password=password)
         _register_all_holders(proxy, user, args.sc_address)
