@@ -17,7 +17,7 @@ Use the followinf command to deploy the smart contract:
 ./xxxnet.snippets.sh deploy
 ```
 
-Note that the smart contract address will be saved in `erdpy.data-storage.json`
+Note that the smart contract address will be saved in `mxpy.data-storage.json`
 
 or upgrade is it's already deployed
 

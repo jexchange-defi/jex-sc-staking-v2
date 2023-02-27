@@ -1,5 +1,5 @@
-elrond_wasm::imports!();
-elrond_wasm::derive_imports!();
+multiversx_sc::imports!();
+multiversx_sc::derive_imports!();
 
 #[derive(Clone, ManagedVecItem, NestedEncode, TopEncode, TopDecode, TypeAbi)]
 pub struct TokenAndBalance<M: ManagedTypeApi> {
@@ -13,7 +13,7 @@ static REWARD_TEAM_A_PERCENT: u32 = 10;
 static REWARD_TEAM_J_PERCENT: u32 = 5;
 static REWARD_TEAM_P_PERCENT: u32 = 5;
 
-#[elrond_wasm::module]
+#[multiversx_sc::module]
 pub trait RewardsModule: crate::tokens::TokensModule + crate::snapshots::SnapshotsModule {
     // owner endpoints
 

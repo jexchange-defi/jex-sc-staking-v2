@@ -1,5 +1,5 @@
-elrond_wasm::imports!();
-elrond_wasm::derive_imports!();
+multiversx_sc::imports!();
+multiversx_sc::derive_imports!();
 
 #[derive(TopEncode, TopDecode, TypeAbi)]
 pub struct TokenAndThreshold<M: ManagedTypeApi> {
@@ -8,7 +8,7 @@ pub struct TokenAndThreshold<M: ManagedTypeApi> {
     pub threshold: BigUint<M>,
 }
 
-#[elrond_wasm::module]
+#[multiversx_sc::module]
 pub trait TokensModule {
     // owner endpoints
 

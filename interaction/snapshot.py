@@ -6,11 +6,11 @@ import os
 from itertools import chain
 
 import requests
-from erdpy.accounts import Account, Address
-from erdpy.contracts import SmartContract
-from erdpy.proxy.core import ElrondProxy, NetworkConfig
-from erdpy.proxy.messages import TransactionOnNetwork
-from erdpy.transactions import Transaction
+from mxpy.accounts import Account, Address
+from mxpy.contracts import SmartContract
+from mxpy.proxy.core import ElrondProxy, NetworkConfig
+from mxpy.proxy.messages import TransactionOnNetwork
+from mxpy.transactions import Transaction
 from more_itertools import grouper
 from utils import ensure_even_length, hex2dec
 

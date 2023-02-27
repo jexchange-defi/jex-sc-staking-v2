@@ -10,8 +10,5 @@ authors = [ "Aurélien Passion <aurelien.passion@gmail.com>",]
 [dependencies.jex-sc-staking-v2]
 path = ".."
 
-[dependencies.elrond-wasm]
-version = "0.38.0"
-
-[dependencies.elrond-wasm-debug]
-version = "0.38.0"
+[dependencies.multiversx-sc-meta]
+version = "0.39.5"

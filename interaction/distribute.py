@@ -3,10 +3,10 @@ import getpass
 import logging
 from time import sleep
 
-from erdpy.accounts import Account
-from erdpy.proxy.core import ElrondProxy, NetworkConfig
-from erdpy.proxy.messages import TransactionOnNetwork
-from erdpy.transactions import Transaction
+from mxpy.accounts import Account
+from mxpy.proxy.core import ElrondProxy, NetworkConfig
+from mxpy.proxy.messages import TransactionOnNetwork
+from mxpy.transactions import Transaction
 from utils import ensure_even_length
 
 logging.basicConfig(level=logging.INFO)

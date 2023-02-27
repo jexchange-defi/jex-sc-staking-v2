@@ -1,5 +1,5 @@
-elrond_wasm::imports!();
-elrond_wasm::derive_imports!();
+multiversx_sc::imports!();
+multiversx_sc::derive_imports!();
 
 #[derive(TopEncode, TypeAbi)]
 pub struct SharesOfAddress<M: ManagedTypeApi> {
@@ -7,7 +7,7 @@ pub struct SharesOfAddress<M: ManagedTypeApi> {
     total_balance: BigUint<M>,
 }
 
-#[elrond_wasm::module]
+#[multiversx_sc::module]
 pub trait SnapshotsModule {
     // owner endpoints
 

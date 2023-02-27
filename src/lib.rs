@@ -4,8 +4,8 @@ mod rewards;
 mod snapshots;
 mod tokens;
 
-elrond_wasm::imports!();
-elrond_wasm::derive_imports!();
+multiversx_sc::imports!();
+multiversx_sc::derive_imports!();
 
 static ERR_NOT_IN_SNAPSHOT_PERIOD: &[u8] = b"Not in snapshot period";
 static ERR_NOT_IN_DISTRIUTION_PERIOD: &[u8] = b"Not in distribution period";
@@ -24,7 +24,7 @@ pub enum RoundState {
     Complete,
 }
 
-#[elrond_wasm::derive::contract]
+#[multiversx_sc::derive::contract]
 pub trait ScStaking:
     rewards::RewardsModule + snapshots::SnapshotsModule + tokens::TokensModule
 {
