@@ -6,13 +6,14 @@ import os
 from itertools import chain
 
 import requests
-from mxpy.accounts import Account, Address
-from mxpy.contracts import SmartContract
-from mxpy.proxy.core import ElrondProxy, NetworkConfig
-from mxpy.proxy.messages import TransactionOnNetwork
-from mxpy.transactions import Transaction
+from multiversx_sdk_cli.accounts import Account, Address
+from multiversx_sdk_cli.contracts import SmartContract
+from multiversx_sdk_network_providers.network_config import NetworkConfig
+from multiversx_sdk_network_providers.proxy_network_provider import \
+    ProxyNetworkProvider
+from multiversx_sdk_network_providers.transactions import TransactionOnNetwork
 from more_itertools import grouper
-from utils import ensure_even_length, hex2dec
+from utils import hex2dec
 
 logging.basicConfig(level=logging.INFO)
 LOG = logging.getLogger()
@@ -35,7 +36,7 @@ HOLDERS_FILENAME = '.holders.csv'
 REPORT_FILENAME = '.report.txt'
 SNAPSHOT_CHUNK_SIZE = 100
 GAS_LIMIT_BASE = 10_000_000
-GAS_LIMIT_PER_ADDRESS = 1_500_000
+GAS_LIMIT_PER_ADDRESS = 1_000_000
 NFT_HOLDING_JEX_EQIV = 100_000
 STABLEPOOL_JEX_EQIV = 50_000
 
@@ -103,7 +104,7 @@ def _fetch_rolling_ballz_holders(api_url: str, jex_token_decimals: int):
         from_ += size_
 
 
-def _fetch_stablepool_owners(proxy: ElrondProxy, jex_token_decimals: int):
+def _fetch_stablepool_owners(proxy: ProxyNetworkProvider, jex_token_decimals: int):
 
     sc = SmartContract(
         'erd1qqqqqqqqqqqqqpgqqze29sursxjz76dyczaj7y0g85mfvccv73eq4fn3kq')
@@ -132,7 +133,7 @@ def _fetch_stablepool_owners(proxy: ElrondProxy, jex_token_decimals: int):
     return owners
 
 
-def _export_holders(api_url: str, proxy: ElrondProxy, token_identifier: str, min_amount: int):
+def _export_holders(api_url: str, proxy: ProxyNetworkProvider, token_identifier: str, min_amount: int):
     LOG.info(f'Export holders of {token_identifier}')
 
     token_info = _fetch_token_info(api_url, token_identifier)
@@ -169,40 +170,35 @@ def _export_holders(api_url: str, proxy: ElrondProxy, token_identifier: str, min
     LOG.info(f'Total {token_identifier} held: {int(total_hbal):,}')
 
 
-def _register_holders(proxy: ElrondProxy, network: NetworkConfig, sc_address, holders):
+def _register_holders(proxy: ProxyNetworkProvider, network: NetworkConfig, sc_address, holders):
     LOG.info('Register holders chunk')
 
     gas_limit = GAS_LIMIT_BASE
     data = 'snapshotHolders'
     processed_holders = []
+    args = []
     for holder in holders:
         LOG.info(holder['address'])
 
-        hexbal = hex(int(holder['balance']))[2:]
-        data += f"@{Address(holder['address']).hex()}"
-        data += f'@{ensure_even_length(hexbal)}'
+        args.append(Address(holder['address']))
+        args.append(int(holder['balance']))
 
         gas_limit += GAS_LIMIT_PER_ADDRESS
         processed_holders.append(holder['address'])
     LOG.debug(f'data={data}')
 
-    transaction = Transaction()
-    transaction.nonce = user.nonce
-    transaction.sender = user.address.bech32()
-    transaction.receiver = sc_address
-    transaction.data = data
-    transaction.gasPrice = network.min_gas_price
-    transaction.gasLimit = gas_limit
-    transaction.chainID = network.chain_id
-    transaction.version = network.min_tx_version
-    transaction.sign(user)
+    sc = SmartContract(sc_address)
+    tx = sc.execute(user, 'snapshotHolders', args, network.min_gas_price,
+                    gas_limit, 0, network.chain_id, network.min_transaction_version)
+
     user.nonce += 1
 
-    tx: TransactionOnNetwork = transaction.send_wait_result(proxy, 60)
-    logging.info(f"Transaction: {tx.get_hash()}")
+    tx: TransactionOnNetwork = tx.send_wait_result(
+        proxy, 60)
+    logging.info(f"Transaction: {tx.hash}")
 
-    if tx.is_done():
-        status = tx.raw['status']
+    if tx.is_completed:
+        status = tx.status.status
     else:
         status = 'Unknown'
     _report_add(processed_holders, status)
@@ -235,7 +231,7 @@ def _parse_csv_line(line: str) -> dict:
     }
 
 
-def _register_all_holders(proxy: ElrondProxy, user: Account, sc_address: str):
+def _register_all_holders(proxy: ProxyNetworkProvider, user: Account, sc_address: str):
     LOG.info(f'Register holders to SC {sc_address}')
 
     network = proxy.get_network_config()
@@ -257,7 +253,7 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--api_url', type=str,
-                        help='Elrond API (mandatory for "export_holders" action)')
+                        help='MultiversX API (mandatory for "export_holders" action)')
     parser.add_argument('--debug',
                         action='store_true')
     parser.add_argument('--token_identifier', type=str,
@@ -265,7 +261,7 @@ if __name__ == '__main__':
     parser.add_argument('--min_amount', type=int,
                         help='minimum amount of tokens to hold (mandatory for "export_holders" action)')
     parser.add_argument('--gateway_url', type=str, required=True,
-                        help='Elrond gateway')
+                        help='MultiversX gateway')
     parser.add_argument('--sc_address', type=str,
                         help='Staking smart contract address (mandatory for "register_holders" action)')
     parser.add_argument('--keyfile', type=str,
@@ -277,7 +273,7 @@ if __name__ == '__main__':
     if args.debug:
         LOG.setLevel(logging.DEBUG)
 
-    proxy = ElrondProxy(args.gateway_url)
+    proxy = ProxyNetworkProvider(args.gateway_url)
 
     if args.action == 'export_holders':
         assert args.api_url is not None, '--api_url is mandatory for "export_holders action"'

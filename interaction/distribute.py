@@ -3,11 +3,12 @@ import getpass
 import logging
 from time import sleep
 
-from mxpy.accounts import Account
-from mxpy.proxy.core import ElrondProxy, NetworkConfig
-from mxpy.proxy.messages import TransactionOnNetwork
-from mxpy.transactions import Transaction
-from utils import ensure_even_length
+from multiversx_sdk_cli.accounts import Account
+from multiversx_sdk_cli.contracts import SmartContract
+from multiversx_sdk_network_providers.network_config import NetworkConfig
+from multiversx_sdk_network_providers.proxy_network_provider import \
+    ProxyNetworkProvider
+from multiversx_sdk_network_providers.transactions import TransactionOnNetwork
 
 logging.basicConfig(level=logging.INFO)
 LOG = logging.getLogger()
@@ -16,34 +17,28 @@ GAS_LIMIT_BASE = 10_000_000
 GAS_LIMIT_PER_ADDRESS = 4_000_000  # for 7 tokens
 
 
-def _distribute(proxy: ElrondProxy, network: NetworkConfig, user: Account, sc_address: str, limit: int, no_wait: False):
+def _distribute(proxy: ProxyNetworkProvider, network: NetworkConfig, user: Account, sc_address: str, limit: int, no_wait: False):
     LOG.info('Distribute rewards')
 
     gas_limit = GAS_LIMIT_BASE + limit * GAS_LIMIT_PER_ADDRESS
-    data = 'distributeRewards'
-    data += f'@{ensure_even_length(hex(limit)[2:])}'
 
-    LOG.debug(f'data={data}')
+    sc = SmartContract(sc_address)
 
-    transaction = Transaction()
-    transaction.nonce = user.nonce
-    transaction.sender = user.address.bech32()
-    transaction.receiver = sc_address
-    transaction.data = data
-    transaction.gasPrice = network.min_gas_price
-    transaction.gasLimit = gas_limit
-    transaction.chainID = network.chain_id
-    transaction.version = network.min_tx_version
-    transaction.sign(user)
+    args = [limit]
+    tx = sc.execute(user, 'distributeRewards', args, network.min_gas_price,
+                    gas_limit, 0, network.chain_id, network.min_transaction_version)
+
     user.nonce += 1
 
     if no_wait:
-        tx_hash = transaction.send(proxy)
+        tx_hash = tx.send(proxy)
         logging.info(f"Transaction: {tx_hash}")
     else:
-        tx: TransactionOnNetwork = transaction.send_wait_result(proxy, 60)
-        if tx.is_done():
-            status = tx.raw['status']
+        transaction_on_network: TransactionOnNetwork = tx.send_wait_result(
+            proxy, 60)
+        logging.info(f"Transaction: {transaction_on_network.hash}")
+        if tx.is_completed:
+            status = tx.status.status
         else:
             status = 'Unknown'
         logging.info(f"Transaction: {tx.hash} - status {status}")
@@ -59,7 +54,7 @@ if __name__ == '__main__':
     parser.add_argument('--keyfile', type=str, required=True,
                         help='User key file')
     parser.add_argument('--gateway_url', type=str, required=True,
-                        help='Elrond gateway')
+                        help='MultiversX gateway')
     parser.add_argument('--repeat', type=int, default=1,
                         help='Iterate N times')
     parser.add_argument('--no_wait', action='store_true', default=False,
@@ -73,7 +68,7 @@ if __name__ == '__main__':
 
     password = getpass.getpass(prompt='Keyfile password: ')
 
-    proxy = ElrondProxy(args.gateway_url)
+    proxy = ProxyNetworkProvider(args.gateway_url)
     network = proxy.get_network_config()
     user = Account(key_file=args.keyfile, password=password)
     user.sync_nonce(proxy)
