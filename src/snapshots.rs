@@ -20,8 +20,6 @@ pub trait SnapshotsModule {
             let (address, balance) = address_and_balance.clone().into_tuple();
 
             self.snapshot_address_balance(&address)
-                .set_if_empty(&BigUint::zero());
-            self.snapshot_address_balance(&address)
                 .update(|x| *x += balance.clone());
 
             self.snapshot_total_balance()
