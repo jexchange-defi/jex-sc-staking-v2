@@ -37,8 +37,8 @@ def _distribute(proxy: ProxyNetworkProvider, network: NetworkConfig, user: Accou
         transaction_on_network: TransactionOnNetwork = tx.send_wait_result(
             proxy, 60)
         logging.info(f"Transaction: {transaction_on_network.hash}")
-        if tx.is_completed:
-            status = tx.status.status
+        if transaction_on_network.is_completed:
+            status = transaction_on_network.status.status
         else:
             status = 'Unknown'
         logging.info(f"Transaction: {tx.hash} - status {status}")
