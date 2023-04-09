@@ -9,6 +9,12 @@ echo "SC address: ${SC_ADDRESS:-Not deployed}"
 # Transactions
 ##
 
+claimDeveloperRewards() {
+    mxpy --verbose contract call ${SC_ADDRESS} --recall-nonce --keyfile=${KEYFILE} --gas-limit=6000000 \
+        --function="ClaimDeveloperRewards" \
+        --proxy=${PROXY} --chain=${CHAIN} --send || return
+}
+
 configure() {
     # erd1hmfwpvsqn8ktzw3dqd0ltpcyfyasgv8mr9w0qecnmpexyp280y8q47ca9d
     read -p "Treasury address: " TREASURY_ADDRESS
