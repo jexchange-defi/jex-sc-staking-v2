@@ -3,17 +3,17 @@ import datetime
 import getpass
 import logging
 import os
-from itertools import chain
+from itertools import chain, groupby
 
 import requests
+from more_itertools import grouper
 from multiversx_sdk_cli.accounts import Account, Address
 from multiversx_sdk_cli.contracts import SmartContract
 from multiversx_sdk_network_providers.network_config import NetworkConfig
 from multiversx_sdk_network_providers.proxy_network_provider import \
     ProxyNetworkProvider
 from multiversx_sdk_network_providers.transactions import TransactionOnNetwork
-from more_itertools import grouper
-from utils import hex2dec
+from utils import hex2dec, str2hex
 
 logging.basicConfig(level=logging.INFO)
 LOG = logging.getLogger()
@@ -61,7 +61,7 @@ def _fetch_token_info(api_url: str, token_identifier: str):
     }
 
 
-def _fetch_jex_token_holders(api_url: str, token_identifier: str):
+def _fetch_token_holders(api_url: str, token_identifier: str):
     from_ = 0
     size = 1000
     while True:
@@ -133,7 +133,30 @@ def _fetch_stablepool_owners(proxy: ProxyNetworkProvider, jex_token_decimals: in
     return owners
 
 
-def _export_holders(api_url: str, proxy: ProxyNetworkProvider, token_identifier: str, min_amount: int):
+def _fetch_onedex_lp_holders(proxy: ProxyNetworkProvider, api_url: str, lp_token_identifier: str,
+                             onedex_sc_address: str):
+    pool_id = '00000010'
+    jex_reserve_key = f"{str2hex('pair_first_token_reserve')}{pool_id}"
+    lp_supply_key = f"{str2hex('pair_lp_token_supply')}{pool_id}"
+
+    url = f'{proxy.url}/address/{onedex_sc_address}/key/{jex_reserve_key}'
+    jex_reserve = hex2dec(requests.get(url).json()['data']['value'])
+
+    url = f'{proxy.url}/address/{onedex_sc_address}/key/{lp_supply_key}'
+    lp_supply = hex2dec(requests.get(url).json()['data']['value'])
+
+    lp_holders = _fetch_token_holders(api_url, lp_token_identifier)
+    for lp_holder in lp_holders:
+        jex_bal = jex_reserve * int(lp_holder['balance']) / lp_supply
+        jex_bal = round(jex_bal)
+        yield {
+            'address': lp_holder['address'],
+            'balance': str(jex_bal)
+        }
+
+
+def _export_holders(api_url: str, proxy: ProxyNetworkProvider, token_identifier: str, min_amount: int,
+                    lp_token_identifier: str, onedex_sc_address: str):
     LOG.info(f'Export holders of {token_identifier}')
 
     token_info = _fetch_token_info(api_url, token_identifier)
@@ -144,22 +167,37 @@ def _export_holders(api_url: str, proxy: ProxyNetworkProvider, token_identifier:
 
     with open(HOLDERS_FILENAME, 'wt') as out:
 
-        jex_holders = _fetch_jex_token_holders(api_url, token_identifier)
+        jex_holders = _fetch_token_holders(api_url, token_identifier)
+
         jex_ballz_holders = _fetch_rolling_ballz_holders(
             api_url, token_decimals)
-        jex_stablepool_owners = _fetch_stablepool_owners(
-            proxy, token_decimals)
 
-        all_holders = chain(jex_holders, jex_ballz_holders,
-                            jex_stablepool_owners)
+        jex_stablepool_owners = _fetch_stablepool_owners(proxy, token_decimals)
+
+        jex_lp_holders = _fetch_onedex_lp_holders(
+            proxy, api_url, lp_token_identifier, onedex_sc_address)
+
+        all_holders = chain(jex_holders,
+                            jex_ballz_holders,
+                            jex_stablepool_owners,
+                            jex_lp_holders)
         all_holders = filter(
             lambda x: _is_valid_holder(x['address']), all_holders)
+        all_holders = sorted(all_holders, key=lambda x: x['address'])
         all_holders = filter(lambda x: int(
             x['balance']) / 10**token_decimals >= min_amount, all_holders)
 
+        groups = groupby(all_holders, lambda x: x['address'])
+        all_holders = [{
+            'address': address,
+            'balance': sum(map(lambda x: int(x['balance']), data))
+        } for (address, data) in groups]
+        all_holders = sorted(
+            all_holders, key=lambda x: x['balance'], reverse=True)
+
         for holder in all_holders:
+            bal = holder['balance']
             nb += 1
-            bal = int(holder['balance'])
             hbal = int(bal / 10**token_decimals)
             line = f"{nb};{holder['address']};{bal};{hbal};"
             print(line)
@@ -256,7 +294,11 @@ if __name__ == '__main__':
                         help='MultiversX API (mandatory for "export_holders" action)')
     parser.add_argument('--debug',
                         action='store_true')
-    parser.add_argument('--token_identifier', type=str,
+    parser.add_argument('--lp_token_identifier', type=str, default='JEXWEGLD-15791b',
+                        help='(mandatory for "export_holders" action)')
+    parser.add_argument('--token_identifier', type=str, default='JEX-9040ca',
+                        help='(mandatory for "export_holders" action)')
+    parser.add_argument('--onedex_sc_address', type=str, default='erd1qqqqqqqqqqqqqpgqqz6vp9y50ep867vnr296mqf3dduh6guvmvlsu3sujc',
                         help='(mandatory for "export_holders" action)')
     parser.add_argument('--min_amount', type=int,
                         help='minimum amount of tokens to hold (mandatory for "export_holders" action)')
@@ -280,7 +322,10 @@ if __name__ == '__main__':
         assert args.token_identifier is not None, '--token_identifier is mandatory for "export_holders action"'
         assert args.min_amount is not None, '--min_amount is mandatory for "export_holders action"'
         _export_holders(args.api_url, proxy,
-                        args.token_identifier, args.min_amount)
+                        args.token_identifier,
+                        args.min_amount,
+                        args.lp_token_identifier,
+                        args.onedex_sc_address)
 
     if args.action == 'register_holders':
         assert args.sc_address is not None, '--sc_address is mandatory for "register_holders" action"'
