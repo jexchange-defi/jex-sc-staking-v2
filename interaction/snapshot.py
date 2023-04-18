@@ -211,14 +211,16 @@ def _export_holders(api_url: str,
         all_holders = filter(
             lambda x: _is_valid_holder(x['address']), all_holders)
         all_holders = sorted(all_holders, key=lambda x: x['address'])
-        all_holders = filter(lambda x: int(
-            x['balance']) / 10**token_decimals >= min_amount, all_holders)
 
         groups = groupby(all_holders, lambda x: x['address'])
         all_holders = [{
             'address': address,
             'balance': sum(map(lambda x: int(x['balance']), data))
         } for (address, data) in groups]
+
+        all_holders = filter(lambda x: int(
+            x['balance']) / 10**token_decimals >= min_amount, all_holders)
+
         all_holders = sorted(
             all_holders, key=lambda x: x['balance'], reverse=True)
 
