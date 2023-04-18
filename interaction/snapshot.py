@@ -133,8 +133,28 @@ def _fetch_stablepool_owners(proxy: ProxyNetworkProvider, jex_token_decimals: in
     return owners
 
 
+def _fetch_one_dex_dual_farming(proxy: ProxyNetworkProvider, onedex_farming_sc_address: str):
+    """ Stakers of LP token on OneDex (dual farming) """
+
+    pool_id = '0000000e'
+    url = f'{proxy.url}/address/{onedex_farming_sc_address}/keys'
+    pairs = requests.get(url).json()['data']['pairs']
+    prefix = f"{str2hex('pool_user_stake_amount')}{pool_id}"
+    for key, value in pairs.items():
+        if key.startswith(prefix):
+            address = Address(key[len(prefix):])
+            balance = hex2dec(value)
+            print(f'{address.bech32()}: {balance}')
+            yield {
+                'address': address.bech32(),
+                'balance': str(balance)
+            }
+
+
 def _fetch_onedex_lp_holders(proxy: ProxyNetworkProvider, api_url: str, lp_token_identifier: str,
-                             onedex_sc_address: str):
+                             onedex_sc_address: str, onedex_farming_sc_address: str):
+    """ Just holders of LP token (not staked) """
+
     pool_id = '00000010'
     jex_reserve_key = f"{str2hex('pair_first_token_reserve')}{pool_id}"
     lp_supply_key = f"{str2hex('pair_lp_token_supply')}{pool_id}"
@@ -146,7 +166,9 @@ def _fetch_onedex_lp_holders(proxy: ProxyNetworkProvider, api_url: str, lp_token
     lp_supply = hex2dec(requests.get(url).json()['data']['value'])
 
     lp_holders = _fetch_token_holders(api_url, lp_token_identifier)
-    for lp_holder in lp_holders:
+    stakers = _fetch_one_dex_dual_farming(proxy, onedex_farming_sc_address)
+
+    for lp_holder in chain(lp_holders, stakers):
         jex_bal = jex_reserve * int(lp_holder['balance']) / lp_supply
         jex_bal = round(jex_bal)
         yield {
@@ -155,8 +177,13 @@ def _fetch_onedex_lp_holders(proxy: ProxyNetworkProvider, api_url: str, lp_token
         }
 
 
-def _export_holders(api_url: str, proxy: ProxyNetworkProvider, token_identifier: str, min_amount: int,
-                    lp_token_identifier: str, onedex_sc_address: str):
+def _export_holders(api_url: str,
+                    proxy: ProxyNetworkProvider,
+                    token_identifier: str,
+                    min_amount: int,
+                    lp_token_identifier: str,
+                    onedex_sc_address: str,
+                    onedex_farming_sc_address: str):
     LOG.info(f'Export holders of {token_identifier}')
 
     token_info = _fetch_token_info(api_url, token_identifier)
@@ -175,7 +202,7 @@ def _export_holders(api_url: str, proxy: ProxyNetworkProvider, token_identifier:
         jex_stablepool_owners = _fetch_stablepool_owners(proxy, token_decimals)
 
         jex_lp_holders = _fetch_onedex_lp_holders(
-            proxy, api_url, lp_token_identifier, onedex_sc_address)
+            proxy, api_url, lp_token_identifier, onedex_sc_address, onedex_farming_sc_address)
 
         all_holders = chain(jex_holders,
                             jex_ballz_holders,
@@ -300,6 +327,8 @@ if __name__ == '__main__':
                         help='(mandatory for "export_holders" action)')
     parser.add_argument('--onedex_sc_address', type=str, default='erd1qqqqqqqqqqqqqpgqqz6vp9y50ep867vnr296mqf3dduh6guvmvlsu3sujc',
                         help='(mandatory for "export_holders" action)')
+    parser.add_argument('--onedex_farming_sc_address', type=str, default='erd1qqqqqqqqqqqqqpgq5774jcntdqkzv62tlvvhfn2y7eevpty6mvlszk3dla',
+                        help='(mandatory for "export_holders" action)')
     parser.add_argument('--min_amount', type=int,
                         help='minimum amount of tokens to hold (mandatory for "export_holders" action)')
     parser.add_argument('--gateway_url', type=str, required=True,
@@ -325,7 +354,8 @@ if __name__ == '__main__':
                         args.token_identifier,
                         args.min_amount,
                         args.lp_token_identifier,
-                        args.onedex_sc_address)
+                        args.onedex_sc_address,
+                        args.onedex_farming_sc_address)
 
     if args.action == 'register_holders':
         assert args.sc_address is not None, '--sc_address is mandatory for "register_holders" action"'
