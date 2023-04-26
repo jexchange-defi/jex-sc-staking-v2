@@ -321,7 +321,7 @@ if __name__ == '__main__':
     LOG.info('Snapshot tool')
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--api_url', type=str,
+    parser.add_argument('--api_url', type=str, default='https://api.multiversx.com',
                         help='MultiversX API (mandatory for "export_holders" action)')
     parser.add_argument('--debug',
                         action='store_true')
@@ -333,9 +333,9 @@ if __name__ == '__main__':
                         help='(mandatory for "export_holders" action)')
     parser.add_argument('--onedex_farming_sc_address', type=str, default='erd1qqqqqqqqqqqqqpgq5774jcntdqkzv62tlvvhfn2y7eevpty6mvlszk3dla',
                         help='(mandatory for "export_holders" action)')
-    parser.add_argument('--min_amount', type=int,
+    parser.add_argument('--min_amount', type=int, default=5000,
                         help='minimum amount of tokens to hold (mandatory for "export_holders" action)')
-    parser.add_argument('--gateway_url', type=str, required=True,
+    parser.add_argument('--gateway_url', type=str, default='https://gateway.multiversx.com',
                         help='MultiversX gateway')
     parser.add_argument('--sc_address', type=str,
                         help='Staking smart contract address (mandatory for "register_holders" action)')
