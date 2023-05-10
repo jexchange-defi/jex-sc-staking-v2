@@ -41,7 +41,7 @@ configureToken() {
     read -p "Token nonce (decimal): " TOKEN_NONCE
     read -p "Threshold: " THRESHOLD
 
-    mxpy --verbose contract call ${SC_ADDRESS} --recall-nonce --keyfile=${KEYFILE} --gas-limit=5000000 \
+    mxpy --verbose contract call ${SC_ADDRESS} --recall-nonce --keyfile=${KEYFILE} --gas-limit=10000000 \
         --function="configureToken" \
         --arguments "${TOKEN_IDENTIFIER}" "${TOKEN_NONCE}" "${THRESHOLD}" \
         --proxy=${PROXY} --chain=${CHAIN} --send || return

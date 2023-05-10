@@ -53,7 +53,7 @@ if __name__ == '__main__':
                         help='Staking smart contract address')
     parser.add_argument('--keyfile', type=str, required=True,
                         help='User key file')
-    parser.add_argument('--gateway_url', type=str, required=True,
+    parser.add_argument('--gateway_url', type=str, default='https://gateway.multiversx.com',
                         help='MultiversX gateway')
     parser.add_argument('--repeat', type=int, default=1,
                         help='Iterate N times')

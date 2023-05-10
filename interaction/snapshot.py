@@ -109,7 +109,7 @@ def _fetch_rolling_ballz_holders(api_url: str, jex_token_decimals: int):
 def _fetch_stablepool_owners(proxy: ProxyNetworkProvider, jex_token_decimals: int):
 
     sc = SmartContract(
-        'erd1qqqqqqqqqqqqqpgqqze29sursxjz76dyczaj7y0g85mfvccv73eq4fn3kq')
+        'erd1qqqqqqqqqqqqqpgqdh6jeeyamfhq66u7rmkyc48q037kk8n26avs400gg8')
     resp = sc.query(proxy, 'getAllMetaPools', [0, 100])
 
     def _parse_meta_pool(hex_: str):
