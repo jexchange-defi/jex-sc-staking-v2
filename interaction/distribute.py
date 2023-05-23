@@ -60,7 +60,7 @@ if __name__ == '__main__':
     parser.add_argument('--no_wait', action='store_true', default=False,
                         help='Do not wait for end of transaction')
     parser.add_argument('limit', type=int,
-                        help='max number of addresses to process')
+                        help='max number of addresses to process (eg 25 for 4 tokens)')
 
     args = parser.parse_args()
     if args.debug:
