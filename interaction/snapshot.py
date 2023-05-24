@@ -42,6 +42,9 @@ GAS_LIMIT_PER_ADDRESS = 1_500_000
 NFT_HOLDING_JEX_EQIV = 100_000
 STABLEPOOL_JEX_EQIV = 50_000
 
+LP_MULTIPLIERS = [("LPJEXUSDC-000000", 1.0)]
+LPS_POOL_SIZE = 100_000_000 * 10**18
+
 
 def _is_valid_holder(address: str) -> bool:
     return not address.startswith('erd1qqqqqqqqqqq') \
@@ -185,10 +188,8 @@ def _fetch_jex_lp_holders(api_url: str):
     All holders will share a pool of 100M JEX (this number may evolve) based on their balance of LP tokens * multiplier.
     """
 
-    pool_size = 100_000_000
-    pairs = [("LPJEXUSDC-000000", 1.0)]
     all_holders = []
-    for (token_id, multiplier) in pairs:
+    for (token_id, multiplier) in LP_MULTIPLIERS:
         LOG.info(f'Fetching holders of {token_id} (x{multiplier})')
 
         holders = _fetch_token_holders(api_url, token_id)
@@ -201,7 +202,7 @@ def _fetch_jex_lp_holders(api_url: str):
     groups = groupby(all_holders, lambda x: x['address'])
     all_holders = [{
         'address': address,
-        'balance': sum(map(lambda x: pool_size * 10**18 * x['balance'] / sum_balances, data))
+        'balance': sum(map(lambda x: LPS_POOL_SIZE * x['balance'] / sum_balances, data))
     } for (address, data) in groups]
 
     return all_holders
