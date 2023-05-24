@@ -179,6 +179,34 @@ def _fetch_onedex_lp_holders(proxy: ProxyNetworkProvider, api_url: str, lp_token
         }
 
 
+def _fetch_jex_lp_holders(api_url: str):
+    """
+    Fetch JEX LP token holders.
+    All holders will share a pool of 100M JEX (this number may evolve) based on their balance of LP tokens * multiplier.
+    """
+
+    pool_size = 100_000_000
+    pairs = [("LPJEXUSDC-000000", 1.0)]
+    all_holders = []
+    for (token_id, multiplier) in pairs:
+        LOG.info(f'Fetching holders of {token_id} (x{multiplier})')
+
+        holders = _fetch_token_holders(api_url, token_id)
+        holders = map(lambda x: (x['address'], int(x['balance']) * multiplier), holders)
+
+        all_holders.extend(holders)
+
+    sum_balances = sum(map(lambda x: x['balance']), all_holders)
+
+    groups = groupby(all_holders, lambda x: x['address'])
+    all_holders = [{
+        'address': address,
+        'balance': sum(map(lambda x: pool_size * 10**18 * x['balance'] / sum_balances, data))
+    } for (address, data) in groups]
+
+    return all_holders
+
+
 def _export_holders(api_url: str,
                     proxy: ProxyNetworkProvider,
                     token_identifier: str,
@@ -203,12 +231,15 @@ def _export_holders(api_url: str,
 
         jex_stablepool_owners = _fetch_stablepool_owners(proxy, token_decimals)
 
-        jex_lp_holders = _fetch_onedex_lp_holders(
+        onedex_lp_holders = _fetch_onedex_lp_holders(
             proxy, api_url, lp_token_identifier, onedex_sc_address, onedex_farming_sc_address)
+        
+        jex_lp_holders = _fetch_jex_lp_holders(api_url)
 
         all_holders = chain(jex_holders,
                             jex_ballz_holders,
                             jex_stablepool_owners,
+                            onedex_lp_holders,
                             jex_lp_holders)
         all_holders = filter(
             lambda x: _is_valid_holder(x['address']), all_holders)
