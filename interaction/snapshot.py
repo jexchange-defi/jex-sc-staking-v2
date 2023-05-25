@@ -31,7 +31,9 @@ IGNORED_ADDRESS = [
     'erd155xlkeyqatck0qay99qk7qwerxc0efergug9k588uql4efm7yhwqqwkcsq',
     'erd1fx5rq2hllw4m8l5a2ax9a2cfyljhrf86t3r0c52858p233h9ekrsspj2wp',
     # JEX bot
-    'erd1n83c3vhdsl7gac6xeuf5waf94x9tl6u552ajzckfygx9mkp69p6src9tjv'
+    'erd1n83c3vhdsl7gac6xeuf5waf94x9tl6u552ajzckfygx9mkp69p6src9tjv',
+    # LP deployer
+    'erd1j770k2n46wzfn5g63gjthhqemu9r23n9tp7seu95vpz5gk5s6avsk5aams'
 ]
 
 HOLDERS_FILENAME = '.holders.csv'
