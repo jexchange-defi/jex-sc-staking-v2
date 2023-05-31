@@ -33,7 +33,9 @@ IGNORED_ADDRESS = [
     # JEX bot
     'erd1n83c3vhdsl7gac6xeuf5waf94x9tl6u552ajzckfygx9mkp69p6src9tjv',
     # LP deployer
-    'erd1j770k2n46wzfn5g63gjthhqemu9r23n9tp7seu95vpz5gk5s6avsk5aams'
+    'erd1j770k2n46wzfn5g63gjthhqemu9r23n9tp7seu95vpz5gk5s6avsk5aams',
+    # Raffle deployer
+    'erd1063jk642gwa6whaqqhd4cz79kaxd4n2rwu35lq4924e7gwmr73eqhfxsgw'
 ]
 
 HOLDERS_FILENAME = '.holders.csv'
@@ -195,19 +197,20 @@ def _fetch_jex_lp_holders(api_url: str):
         LOG.info(f'Fetching holders of {token_id} (x{multiplier})')
 
         holders = _fetch_token_holders(api_url, token_id)
-        holders = map(lambda x: (x['address'], int(x['balance']) * multiplier), holders)
+        holders = map(lambda x: {
+            'address': x['address'],
+            'balance': int(x['balance']) * multiplier}, holders)
 
         all_holders.extend(holders)
 
-    sum_balances = sum(map(lambda x: x['balance']), all_holders)
-
+    sum_balances = sum(map(lambda x: x['balance'], all_holders))
     groups = groupby(all_holders, lambda x: x['address'])
-    all_holders = [{
-        'address': address,
-        'balance': sum(map(lambda x: LPS_POOL_SIZE * x['balance'] / sum_balances, data))
-    } for (address, data) in groups]
 
-    return all_holders
+    for (address, data) in groups:
+        yield {
+            'address': address,
+            'balance': sum(map(lambda x: LPS_POOL_SIZE * x['balance'] / sum_balances, data))
+        }
 
 
 def _export_holders(api_url: str,
@@ -236,7 +239,7 @@ def _export_holders(api_url: str,
 
         onedex_lp_holders = _fetch_onedex_lp_holders(
             proxy, api_url, lp_token_identifier, onedex_sc_address, onedex_farming_sc_address)
-        
+
         jex_lp_holders = _fetch_jex_lp_holders(api_url)
 
         all_holders = chain(jex_holders,
@@ -265,7 +268,7 @@ def _export_holders(api_url: str,
             nb += 1
             hbal = int(bal / 10**token_decimals)
             line = f"{nb};{holder['address']};{bal};{hbal};"
-            print(line)
+            # print(line)
             out.write(line)
             out.write("\n")
             total_hbal += hbal
