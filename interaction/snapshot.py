@@ -31,7 +31,11 @@ IGNORED_ADDRESS = [
     'erd155xlkeyqatck0qay99qk7qwerxc0efergug9k588uql4efm7yhwqqwkcsq',
     'erd1fx5rq2hllw4m8l5a2ax9a2cfyljhrf86t3r0c52858p233h9ekrsspj2wp',
     # JEX bot
-    'erd1n83c3vhdsl7gac6xeuf5waf94x9tl6u552ajzckfygx9mkp69p6src9tjv'
+    'erd1n83c3vhdsl7gac6xeuf5waf94x9tl6u552ajzckfygx9mkp69p6src9tjv',
+    # LP deployer
+    'erd1j770k2n46wzfn5g63gjthhqemu9r23n9tp7seu95vpz5gk5s6avsk5aams',
+    # Raffle deployer
+    'erd1063jk642gwa6whaqqhd4cz79kaxd4n2rwu35lq4924e7gwmr73eqhfxsgw'
 ]
 
 HOLDERS_FILENAME = '.holders.csv'
@@ -41,6 +45,9 @@ GAS_LIMIT_BASE = 20_000_000
 GAS_LIMIT_PER_ADDRESS = 1_500_000
 NFT_HOLDING_JEX_EQIV = 100_000
 STABLEPOOL_JEX_EQIV = 50_000
+
+LP_MULTIPLIERS = [("LPJEXUSDT-732142", 1.0)]
+LPS_POOL_SIZE = 100_000_000 * 10**18
 
 
 def _is_valid_holder(address: str) -> bool:
@@ -179,6 +186,33 @@ def _fetch_onedex_lp_holders(proxy: ProxyNetworkProvider, api_url: str, lp_token
         }
 
 
+def _fetch_jex_lp_holders(api_url: str):
+    """
+    Fetch JEX LP token holders.
+    All holders will share a pool of 100M JEX (this number may evolve) based on their balance of LP tokens * multiplier.
+    """
+
+    all_holders = []
+    for (token_id, multiplier) in LP_MULTIPLIERS:
+        LOG.info(f'Fetching holders of {token_id} (x{multiplier})')
+
+        holders = _fetch_token_holders(api_url, token_id)
+        holders = map(lambda x: {
+            'address': x['address'],
+            'balance': int(x['balance']) * multiplier}, holders)
+
+        all_holders.extend(holders)
+
+    sum_balances = sum(map(lambda x: x['balance'], all_holders))
+    groups = groupby(all_holders, lambda x: x['address'])
+
+    for (address, data) in groups:
+        yield {
+            'address': address,
+            'balance': sum(map(lambda x: LPS_POOL_SIZE * x['balance'] / sum_balances, data))
+        }
+
+
 def _export_holders(api_url: str,
                     proxy: ProxyNetworkProvider,
                     token_identifier: str,
@@ -203,12 +237,15 @@ def _export_holders(api_url: str,
 
         jex_stablepool_owners = _fetch_stablepool_owners(proxy, token_decimals)
 
-        jex_lp_holders = _fetch_onedex_lp_holders(
+        onedex_lp_holders = _fetch_onedex_lp_holders(
             proxy, api_url, lp_token_identifier, onedex_sc_address, onedex_farming_sc_address)
+
+        jex_lp_holders = _fetch_jex_lp_holders(api_url)
 
         all_holders = chain(jex_holders,
                             jex_ballz_holders,
                             jex_stablepool_owners,
+                            onedex_lp_holders,
                             jex_lp_holders)
         all_holders = filter(
             lambda x: _is_valid_holder(x['address']), all_holders)
@@ -231,7 +268,7 @@ def _export_holders(api_url: str,
             nb += 1
             hbal = int(bal / 10**token_decimals)
             line = f"{nb};{holder['address']};{bal};{hbal};"
-            print(line)
+            # print(line)
             out.write(line)
             out.write("\n")
             total_hbal += hbal
