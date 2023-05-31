@@ -273,7 +273,7 @@ def _export_holders(api_url: str,
             out.write("\n")
             total_hbal += hbal
 
-    LOG.info(f'Total {token_identifier} held: {int(total_hbal):,}')
+    LOG.info(f'Total points: {int(total_hbal):,}')
 
 
 def _register_holders(proxy: ProxyNetworkProvider, network: NetworkConfig, sc_address, holders):
