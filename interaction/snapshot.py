@@ -48,7 +48,8 @@ STABLEPOOL_JEX_EQIV = 50_000
 
 LP_MULTIPLIERS = [("LPETHBTC-8b8a1f", 1.0),
                   ("LPJEXUSDT-732142", 1.0),
-                  ("LPJEXWEGLD-2bccc4", 1.0)]
+                  ("LPJEXWEGLD-2bccc4", 1.0),
+                  ("LPJEXWETH-2a2e52", 1.0)]
 LPS_POOL_SIZE = 100_000_000 * 10**18
 
 
@@ -155,7 +156,7 @@ def _fetch_one_dex_dual_farming(proxy: ProxyNetworkProvider, onedex_farming_sc_a
         if key.startswith(prefix):
             address = Address(key[len(prefix):])
             balance = hex2dec(value)
-            print(f'{address.bech32()}: {balance}')
+            # print(f'{address.bech32()}: {balance}')
             yield {
                 'address': address.bech32(),
                 'balance': str(balance)
