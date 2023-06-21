@@ -19,7 +19,7 @@ pub trait RewardsModule: crate::tokens::TokensModule + crate::snapshots::Snapsho
 
     fn fund_rewards_internal(&self) {
         let payments = &self.call_value().all_esdt_transfers();
-        for payment in payments {
+        for payment in payments.iter() {
             self.send().direct_esdt(
                 &self.treasury_address().get(),
                 &payment.token_identifier,
