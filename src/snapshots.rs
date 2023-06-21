@@ -15,17 +15,20 @@ pub trait SnapshotsModule {
         &self,
         addresses_and_balances: MultiValueEncoded<MultiValue2<ManagedAddress, BigUint>>,
     ) {
+        let mut total_diff = BigUint::zero();
+
         for address_and_balance in addresses_and_balances {
             let (address, balance) = address_and_balance.clone().into_tuple();
 
             self.snapshot_address_balance(&address)
-                .update(|x| *x += balance.clone());
+                .update(|x| *x += &balance);
 
-            self.snapshot_total_balance()
-                .update(|x| *x += balance.clone());
+            total_diff += &balance;
 
-            self.all_addresses().insert(address.clone());
+            self.all_addresses().insert(address);
         }
+
+        self.snapshot_total_balance().update(|x| *x += total_diff);
     }
 
     // functions

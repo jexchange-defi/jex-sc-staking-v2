@@ -1,5 +1,5 @@
-PROJECT=..
-KEYFILE="../../wallets/deployer-deprecated.json"
+BYTECODE=../output/jex-sc-staking-v2.wasm
+KEYFILE="../../wallets/deployer.json"
 PROXY=https://devnet-gateway.multiversx.com
 SC_ADDRESS=$(mxpy data load --key=address-devnet)
 CHAIN=D
@@ -12,7 +12,7 @@ deploy() {
     echo 'You are about to deploy SC on devnet (Ctrl-C to abort)'
     read answer
 
-    mxpy --verbose contract deploy --project=${PROJECT} --metadata-payable \
+    mxpy --verbose contract deploy --bytecode=${BYTECODE} --metadata-payable \
         --keyfile=${KEYFILE} --gas-limit=70000000 --outfile="deploy-devnet.interaction.json" \
         --proxy=${PROXY} --chain=${CHAIN} --recall-nonce --send || return
 
@@ -28,7 +28,7 @@ upgrade() {
     echo 'You are about to upgrade current SC on devnet (Ctrl-C to abort)'
     read answer
 
-    mxpy --verbose contract upgrade --project=${PROJECT} --metadata-payable \
+    mxpy --verbose contract upgrade --bytecode=${BYTECODE} --metadata-payable \
         --keyfile=${KEYFILE} --gas-limit=70000000 --outfile="deploy-devnet.interaction.json" \
         --proxy=${PROXY} --chain=${CHAIN} --recall-nonce --send ${SC_ADDRESS} || return
 

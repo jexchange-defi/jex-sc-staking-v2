@@ -298,7 +298,8 @@ def _register_holders(proxy: ProxyNetworkProvider, network: NetworkConfig, sc_ad
 
     sc = SmartContract(sc_address)
     tx = sc.execute(user, 'snapshotHolders', args, network.min_gas_price,
-                    gas_limit, 0, network.chain_id, network.min_transaction_version)
+                    gas_limit, 0, network.chain_id, network.min_transaction_version,
+                    guardian='', options=0)
 
     user.nonce += 1
 
