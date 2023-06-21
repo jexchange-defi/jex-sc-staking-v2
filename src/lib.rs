@@ -78,7 +78,7 @@ pub trait ScStaking:
         addresses_and_balances: MultiValueEncoded<MultiValue2<ManagedAddress, BigUint>>,
     ) {
         self.require_snapshot_period();
-        self.snapshot_internal(self.current_round().get(), addresses_and_balances);
+        self.snapshot_internal(addresses_and_balances);
     }
 
     #[payable("*")]

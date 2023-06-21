@@ -13,7 +13,6 @@ pub trait SnapshotsModule {
 
     fn snapshot_internal(
         &self,
-        round: u32,
         addresses_and_balances: MultiValueEncoded<MultiValue2<ManagedAddress, BigUint>>,
     ) {
         for address_and_balance in addresses_and_balances {
@@ -26,13 +25,6 @@ pub trait SnapshotsModule {
                 .update(|x| *x += balance.clone());
 
             self.all_addresses().insert(address.clone());
-
-            self.snapshot_event(
-                round,
-                &address,
-                self.blockchain().get_block_epoch(),
-                &balance,
-            );
         }
     }
 
@@ -76,13 +68,4 @@ pub trait SnapshotsModule {
             total_balance: self.snapshot_total_balance().get(),
         };
     }
-
-    #[event("snapshot")]
-    fn snapshot_event(
-        &self,
-        #[indexed] round: u32,
-        #[indexed] address: &ManagedAddress,
-        #[indexed] epoch: u64,
-        amount: &BigUint,
-    );
 }
