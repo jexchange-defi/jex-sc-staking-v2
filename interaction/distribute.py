@@ -26,7 +26,8 @@ def _distribute(proxy: ProxyNetworkProvider, network: NetworkConfig, user: Accou
 
     args = [limit]
     tx = sc.execute(user, 'distributeRewards', args, network.min_gas_price,
-                    gas_limit, 0, network.chain_id, network.min_transaction_version)
+                    gas_limit, 0, network.chain_id, network.min_transaction_version,
+                    guardian='', options=0)
 
     user.nonce += 1
 
