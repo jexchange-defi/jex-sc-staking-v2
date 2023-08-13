@@ -35,7 +35,9 @@ IGNORED_ADDRESS = [
     # LP deployer
     'erd1j770k2n46wzfn5g63gjthhqemu9r23n9tp7seu95vpz5gk5s6avsk5aams',
     # Raffle deployer
-    'erd1063jk642gwa6whaqqhd4cz79kaxd4n2rwu35lq4924e7gwmr73eqhfxsgw'
+    'erd1063jk642gwa6whaqqhd4cz79kaxd4n2rwu35lq4924e7gwmr73eqhfxsgw',
+    # Burn wallet
+    'erd1rn79sxfs2ytqg60jy7mmu8gs37562ze7stm0tplrwglk7nnjm5uqzzmnc4'
 ]
 
 HOLDERS_FILENAME = '.holders.csv'
