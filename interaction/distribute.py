@@ -14,7 +14,7 @@ logging.basicConfig(level=logging.INFO)
 LOG = logging.getLogger()
 
 GAS_LIMIT_BASE = 10_000_000
-GAS_LIMIT_PER_ADDRESS = 4_000_000  # for 7 tokens
+GAS_LIMIT_PER_ADDRESS = 4_000_000
 
 
 def _distribute(proxy: ProxyNetworkProvider, network: NetworkConfig, user: Account, sc_address: str, limit: int, no_wait: False):
