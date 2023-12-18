@@ -52,6 +52,7 @@ STABLEPOOL_JEX_EQIV = 50_000
 
 # USD value of 1 LP token * multiplier = approx 90
 LP_MULTIPLIERS = [("LPETHBTC-8b8a1f", 1.0),
+                  ("LPJEXRARE-518166", 1.0),
                   ("LPJEXUSDT-732142", 1.0),
                   ("LPJEXWEGLD-2bccc4", 1.0),
                   ("LPJEXWETH-2a2e52", 1.0),
