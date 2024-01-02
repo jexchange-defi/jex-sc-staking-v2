@@ -9,7 +9,7 @@ from typing import Tuple
 import requests
 from more_itertools import grouper
 from multiversx_sdk_cli.accounts import Account, Address
-from multiversx_sdk_cli.contracts import SmartContract
+from multiversx_sdk_cli.contracts import QueryResult, SmartContract
 from multiversx_sdk_network_providers.network_config import NetworkConfig
 from multiversx_sdk_network_providers.proxy_network_provider import \
     ProxyNetworkProvider
@@ -123,6 +123,8 @@ def _fetch_token_holders(api_url: str, token_identifier: str):
                 return
             for holder in json_:
                 yield holder
+            if len(json_) < size:
+                return
 
         from_ += size
 
@@ -146,6 +148,8 @@ def _fetch_rolling_ballz_holders(api_url: str, jex_token_decimals: int):
                 holder['balance'] = int(holder['balance']) * NFT_HOLDING_JEX_EQIV * \
                     10**jex_token_decimals
                 yield holder
+            if len(json_) < size_:
+                return
         from_ += size_
 
 
@@ -221,15 +225,31 @@ def _fetch_jex_lp_holders(api_url: str):
 
 
 def _fetch_jex_lockers(proxy: ProxyNetworkProvider):
+    LOG.info('Fetch JEX lockers')
+
     sc = SmartContract(
         'erd1qqqqqqqqqqqqqpgq05whpg29ggrrm9ww3ufsf9ud23f66msv6avs5s5xxy')
 
     from_ = 0
     size_ = 200
 
-    res = sc.query(proxy, 'getAllLocks', [from_, size_])
+    lockers = []
+    while True:
+        resp = sc.query(proxy, 'getAllLocks', [from_, size_])
 
-    lockers = [_parse_address_and_lock(r.hex) for r in res]
+        if len(resp) > 0 and isinstance(resp[0], QueryResult):
+            lockers.extend([_parse_address_and_lock(qr.hex) for qr in resp])
+        elif resp == []:
+            break
+        else:
+            LOG.error('Error while fetching lockers')
+            LOG.info(resp)
+            exit(1)
+
+        from_ += size_
+
+    print('nb lockers')
+    print(len(lockers))
 
     return lockers
 
@@ -269,6 +289,8 @@ def _export_holders(api_url: str,
             onedex_lp_holders,
             jex_lp_holders,
             jex_lockers)
+
+        # print([h for h in all_holders if h['address'] == ''])
 
         all_holders = filter(
             lambda x: _is_valid_holder(x['address']), all_holders)
