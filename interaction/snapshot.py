@@ -4,6 +4,7 @@ import getpass
 import logging
 import os
 from itertools import chain, groupby
+from typing import Tuple
 
 import requests
 from more_itertools import grouper
@@ -48,22 +49,46 @@ SNAPSHOT_CHUNK_SIZE = 100
 GAS_LIMIT_BASE = 20_000_000
 GAS_LIMIT_PER_ADDRESS = 1_500_000
 NFT_HOLDING_JEX_EQIV = 100_000
-STABLEPOOL_JEX_EQIV = 50_000
 
 # USD value of 1 LP token * multiplier = approx 90
 LP_MULTIPLIERS = [("LPETHBTC-8b8a1f", 1.0),
                   ("LPJEXRARE-518166", 1.0),
                   ("LPJEXUSDT-732142", 1.0),
-                  ("LPJEXWEGLD-2bccc4", 1.0),
+                  ("LPJEXWEGLD-2bccc4", 0.95),
                   ("LPJEXWETH-2a2e52", 1.0),
-                  ("LPUSDCUSDT-fd8cf1", 0.011),
-                  ("LPJEXBEE-a6fd37", 110)]
+                  ("LPUSDCUSDT-fd8cf1", 0.01),
+                  ("LPJEXBEE-a6fd37", 100),
+                  ("LPJACKCOAT-d49dd4", 0.5)]
 LPS_POOL_SIZE = 100_000_000 * 10**18
 
 
 def _is_valid_holder(address: str) -> bool:
     return not address.startswith('erd1qqqqqqqqqqq') \
         and not address in IGNORED_ADDRESS
+
+
+def _parse_address_and_lock(hex_: str):
+    offset = 0
+
+    address = Address(hex_[offset: offset+64])
+    offset += 64
+
+    len_ = int(hex_[offset: offset+8], base=16)
+    offset += 8
+
+    # locked_amount = int(hex_[offset: offset + 2*len_], base=16)
+    offset += 2 * len_  # locked amount
+
+    offset += 16  # unlock epoch
+    offset += 16  # remaining_epochs
+    offset += 8  # len reward power
+
+    reward_power = int(hex_[offset:], base=16)
+
+    return {
+        'address': address.bech32(),
+        'balance': reward_power
+    }
 
 
 def _fetch_token_info(api_url: str, token_identifier: str):
@@ -122,35 +147,6 @@ def _fetch_rolling_ballz_holders(api_url: str, jex_token_decimals: int):
                     10**jex_token_decimals
                 yield holder
         from_ += size_
-
-
-def _fetch_stablepool_owners(proxy: ProxyNetworkProvider, jex_token_decimals: int):
-
-    sc = SmartContract(
-        'erd1qqqqqqqqqqqqqpgqdh6jeeyamfhq66u7rmkyc48q037kk8n26avs400gg8')
-    resp = sc.query(proxy, 'getAllMetaPools', [0, 100])
-
-    def _parse_meta_pool(hex_: str):
-        idx = 0
-
-        id_ = hex2dec(hex_[idx:idx + 8])
-        idx += 8
-
-        nb_pools = hex2dec(hex_[idx:idx + 8])
-        idx += 8
-
-        idx += nb_pools * 8  # skip pool IDs
-
-        address_hex = hex_[idx: idx+64]
-        address = Address(address_hex)
-
-        return {
-            'address': address.bech32(),
-            'balance': STABLEPOOL_JEX_EQIV * 10**jex_token_decimals
-        }
-
-    owners = list(map(lambda x: _parse_meta_pool(x.hex), resp))
-    return owners
 
 
 def _fetch_one_dex_dual_farming(proxy: ProxyNetworkProvider, onedex_farming_sc_address: str):
@@ -224,6 +220,20 @@ def _fetch_jex_lp_holders(api_url: str):
         }
 
 
+def _fetch_jex_lockers(proxy: ProxyNetworkProvider):
+    sc = SmartContract(
+        'erd1qqqqqqqqqqqqqpgq05whpg29ggrrm9ww3ufsf9ud23f66msv6avs5s5xxy')
+
+    from_ = 0
+    size_ = 200
+
+    res = sc.query(proxy, 'getAllLocks', [from_, size_])
+
+    lockers = [_parse_address_and_lock(r.hex) for r in res]
+
+    return lockers
+
+
 def _export_holders(api_url: str,
                     proxy: ProxyNetworkProvider,
                     token_identifier: str,
@@ -246,18 +256,20 @@ def _export_holders(api_url: str,
         jex_ballz_holders = _fetch_rolling_ballz_holders(
             api_url, token_decimals)
 
-        jex_stablepool_owners = _fetch_stablepool_owners(proxy, token_decimals)
-
         onedex_lp_holders = _fetch_onedex_lp_holders(
             proxy, api_url, lp_token_identifier, onedex_sc_address, onedex_farming_sc_address)
 
         jex_lp_holders = _fetch_jex_lp_holders(api_url)
 
-        all_holders = chain(jex_holders,
-                            jex_ballz_holders,
-                            jex_stablepool_owners,
-                            onedex_lp_holders,
-                            jex_lp_holders)
+        jex_lockers = _fetch_jex_lockers(proxy)
+
+        all_holders = chain(
+            jex_holders,
+            jex_ballz_holders,
+            onedex_lp_holders,
+            jex_lp_holders,
+            jex_lockers)
+
         all_holders = filter(
             lambda x: _is_valid_holder(x['address']), all_holders)
         all_holders = sorted(all_holders, key=lambda x: x['address'])

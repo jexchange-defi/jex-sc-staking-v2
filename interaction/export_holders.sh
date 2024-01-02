@@ -1,3 +1,3 @@
 #!/bin/sh
 
-python snapshot.py export_holders
+python snapshot.py $* export_holders
