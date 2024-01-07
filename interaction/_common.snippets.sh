@@ -10,7 +10,7 @@ echo "SC address: ${SC_ADDRESS:-Not deployed}"
 ##
 
 claimDeveloperRewards() {
-    mxpy --verbose contract call ${SC_ADDRESS} --recall-nonce --keyfile=${KEYFILE} --gas-limit=6000000 \
+    mxpy  contract call ${SC_ADDRESS} --recall-nonce --keyfile=${KEYFILE} --gas-limit=6000000 \
         --function="ClaimDeveloperRewards" \
         --proxy=${PROXY} --chain=${CHAIN} --send || return
 }
@@ -28,7 +28,7 @@ configure() {
     # erd155xlkeyqatck0qay99qk7qwerxc0efergug9k588uql4efm7yhwqqwkcsq
     read -p "Team P address: " TEAM_P_ADDRESS
     TEAM_P_ADDRESS="0x$(mxpy wallet bech32 --decode ${TEAM_P_ADDRESS})"
-    mxpy --verbose contract call ${SC_ADDRESS} --recall-nonce --keyfile=${KEYFILE} --gas-limit=6000000 \
+    mxpy  contract call ${SC_ADDRESS} --recall-nonce --keyfile=${KEYFILE} --gas-limit=6000000 \
         --function="configure" \
         --arguments ${TREASURY_ADDRESS} ${TEAM_A_ADDRESS} ${TEAM_J_ADDRESS} ${TEAM_P_ADDRESS} \
         --proxy=${PROXY} --chain=${CHAIN} --send || return
@@ -41,7 +41,7 @@ configureToken() {
     read -p "Token nonce (decimal): " TOKEN_NONCE
     read -p "Threshold: " THRESHOLD
 
-    mxpy --verbose contract call ${SC_ADDRESS} --recall-nonce --keyfile=${KEYFILE} --gas-limit=10000000 \
+    mxpy  contract call ${SC_ADDRESS} --recall-nonce --keyfile=${KEYFILE} --gas-limit=10000000 \
         --function="configureToken" \
         --arguments "${TOKEN_IDENTIFIER}" "${TOKEN_NONCE}" "${THRESHOLD}" \
         --proxy=${PROXY} --chain=${CHAIN} --send || return
@@ -51,20 +51,20 @@ distributeRewards() {
     read -p "Limit (decimal): " LIMIT
     GAS_LIMIT=$((5000000 * LIMIT))
 
-    mxpy --verbose contract call ${SC_ADDRESS} --recall-nonce --keyfile=${KEYFILE} --gas-limit=${GAS_LIMIT} \
+    mxpy  contract call ${SC_ADDRESS} --recall-nonce --keyfile=${KEYFILE} --gas-limit=${GAS_LIMIT} \
         --function="distributeRewards" \
         --arguments "${LIMIT}" \
         --proxy=${PROXY} --chain=${CHAIN} --send || return
 }
 
 initRound() {
-    mxpy --verbose contract call ${SC_ADDRESS} --recall-nonce --keyfile=${KEYFILE} --gas-limit=3000000 \
+    mxpy  contract call ${SC_ADDRESS} --recall-nonce --keyfile=${KEYFILE} --gas-limit=3000000 \
         --function="initRound" \
         --proxy=${PROXY} --chain=${CHAIN} --send || return
 }
 
 prepareRewards() {
-    mxpy --verbose contract call ${SC_ADDRESS} --recall-nonce --keyfile=${KEYFILE} --gas-limit=10000000 \
+    mxpy  contract call ${SC_ADDRESS} --recall-nonce --keyfile=${KEYFILE} --gas-limit=10000000 \
         --function="prepareRewards" \
         --proxy=${PROXY} --chain=${CHAIN} --send || return
 }
@@ -88,7 +88,7 @@ snapshot() {
     ADDRESS="0x$(mxpy wallet bech32 --decode ${ADDRESS})"
     read -p "Balance: " BALANCE
 
-    mxpy --verbose contract call ${SC_ADDRESS} --recall-nonce --keyfile=${KEYFILE} --gas-limit=5000000 \
+    mxpy  contract call ${SC_ADDRESS} --recall-nonce --keyfile=${KEYFILE} --gas-limit=5000000 \
         --function="snapshot" \
         --arguments "${ADDRESS}" "${BALANCE}" \
         --proxy=${PROXY} --chain=${CHAIN} --send || return
@@ -99,20 +99,20 @@ snapshot() {
 ##
 
 getAllAddresses() {
-    mxpy --verbose contract query ${SC_ADDRESS} --function "getAllAddresses" --proxy=${PROXY}
+    mxpy  contract query ${SC_ADDRESS} --function "getAllAddresses" --proxy=${PROXY}
 }
 
 getCurrentRoundRewards() {
-    mxpy --verbose contract query ${SC_ADDRESS} --function "getCurrentRoundRewards" --proxy=${PROXY}
+    mxpy  contract query ${SC_ADDRESS} --function "getCurrentRoundRewards" --proxy=${PROXY}
 }
 
 getNbAddresses() {
-    mxpy --verbose contract query ${SC_ADDRESS} --function "getNbAddresses" --proxy=${PROXY}
+    mxpy  contract query ${SC_ADDRESS} --function "getNbAddresses" --proxy=${PROXY}
 }
 
 getRewardsForRound() {
     read -p "Round: " ROUND
-    mxpy --verbose contract query ${SC_ADDRESS} \
+    mxpy  contract query ${SC_ADDRESS} \
         --function "getRewardsForRound" --arguments "${ROUND}" \
         --proxy=${PROXY}
 }
@@ -120,19 +120,19 @@ getRewardsForRound() {
 getSharesOfAddress() {
     read -p "Address: " ADDRESS
     HEX_ADDRESS="0x$(mxpy wallet bech32 --decode ${ADDRESS})"
-    mxpy --verbose contract query ${SC_ADDRESS} \
+    mxpy  contract query ${SC_ADDRESS} \
         --function "getSharesOfAddress" --arguments "${HEX_ADDRESS}" \
         --proxy=${PROXY}
 }
 
 getSnapshotTotalBalance() {
-    mxpy --verbose contract query ${SC_ADDRESS} --function "getSnapshotTotalBalance" --proxy=${PROXY}
+    mxpy  contract query ${SC_ADDRESS} --function "getSnapshotTotalBalance" --proxy=${PROXY}
 }
 
 getState() {
-    mxpy --verbose contract query ${SC_ADDRESS} --function "getState" --proxy=${PROXY}
+    mxpy  contract query ${SC_ADDRESS} --function "getState" --proxy=${PROXY}
 }
 
 getTokenThresholds() {
-    mxpy --verbose contract query ${SC_ADDRESS} --function "getTokenThresholds" --proxy=${PROXY}
+    mxpy  contract query ${SC_ADDRESS} --function "getTokenThresholds" --proxy=${PROXY}
 }
