@@ -50,15 +50,16 @@ GAS_LIMIT_BASE = 20_000_000
 GAS_LIMIT_PER_ADDRESS = 1_500_000
 NFT_HOLDING_JEX_EQIV = 100_000
 
-# USD value of 1 LP token * multiplier = approx 90
-LP_MULTIPLIERS = [("LPETHBTC-8b8a1f", 1.0),
-                  ("LPJEXRARE-518166", 1.0),
-                  ("LPJEXUSDT-732142", 1.0),
-                  ("LPJEXWEGLD-2bccc4", 0.95),
-                  ("LPJEXWETH-2a2e52", 1.0),
-                  ("LPUSDCUSDT-fd8cf1", 0.01),
-                  ("LPJEXBEE-a6fd37", 100),
-                  ("LPJACKCOAT-d49dd4", 0.5)]
+# USD value of 1 LP token / 100 = multiplier
+LP_MULTIPLIERS = [("LPETHBTC-8b8a1f", 0.96),
+                  ("LPETHEGLD-bcb4ac", 0.98),
+                  ("LPJEXUSDT-732142", 0.9),
+                  ("LPJEXWEGLD-2bccc4", 0.98),
+                  ("LPJEXWETH-2a2e52", 0.88),
+                  ("LPJEXBEE-a6fd37", 79.2),
+                  ("LPJEXRARE-518166", 1.32),
+                  ("LPJACKCOAT-d49dd4", 0.17),
+                  ("LPUSDCUSDT-fd8cf1", 0.01)]
 LPS_POOL_SIZE = 100_000_000 * 10**18
 
 
@@ -224,7 +225,7 @@ def _fetch_jex_lp_holders(api_url: str):
         }
 
 
-def _fetch_jex_lockers(proxy: ProxyNetworkProvider):
+def _fetch_jex_lockers(proxy: ProxyNetworkProvider, token_decimals: int):
     LOG.info('Fetch JEX lockers')
 
     sc = SmartContract(
@@ -248,8 +249,9 @@ def _fetch_jex_lockers(proxy: ProxyNetworkProvider):
 
         from_ += size_
 
-    print('nb lockers')
-    print(len(lockers))
+    total_points = sum([l["balance"] for l in lockers]) // 10**token_decimals
+    LOG.info(f'Nb lockers: {len(lockers)}')
+    LOG.info(f'Total reward power from lockers: {total_points:,}')
 
     return lockers
 
@@ -281,7 +283,7 @@ def _export_holders(api_url: str,
 
         jex_lp_holders = _fetch_jex_lp_holders(api_url)
 
-        jex_lockers = _fetch_jex_lockers(proxy)
+        jex_lockers = _fetch_jex_lockers(proxy, token_decimals)
 
         all_holders = chain(
             jex_holders,
