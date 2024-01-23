@@ -51,14 +51,14 @@ GAS_LIMIT_PER_ADDRESS = 1_500_000
 NFT_HOLDING_JEX_EQIV = 100_000
 
 # USD value of 1 LP token / 100 = multiplier
-LP_MULTIPLIERS = [("LPETHBTC-8b8a1f", 0.96),
-                  ("LPETHEGLD-bcb4ac", 0.98),
-                  ("LPJEXUSDT-732142", 0.9),
-                  ("LPJEXWEGLD-2bccc4", 0.98),
-                  ("LPJEXWETH-2a2e52", 0.88),
-                  ("LPJEXBEE-a6fd37", 79.2),
-                  ("LPJEXRARE-518166", 1.32),
-                  ("LPJACKCOAT-d49dd4", 0.17),
+LP_MULTIPLIERS = [("LPETHBTC-8b8a1f", 0.88),
+                  ("LPETHEGLD-bcb4ac", 0.93),
+                  ("LPJEXUSDT-732142", 0.83),
+                  ("LPJEXWEGLD-2bccc4", 0.87),
+                  ("LPJEXWETH-2a2e52", 0.80),
+                  ("LPJEXBEE-a6fd37", 66.15),
+                  ("LPJEXRARE-518166", 1.07),
+                  ("LPJACKCOAT-d49dd4", 0.12),
                   ("LPUSDCUSDT-fd8cf1", 0.01)]
 LPS_POOL_SIZE = 100_000_000 * 10**18
 
