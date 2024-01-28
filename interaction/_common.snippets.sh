@@ -64,7 +64,7 @@ initRound() {
 }
 
 prepareRewards() {
-    mxpy  contract call ${SC_ADDRESS} --recall-nonce --keyfile=${KEYFILE} --gas-limit=10000000 \
+    mxpy  contract call ${SC_ADDRESS} --recall-nonce --keyfile=${KEYFILE} --gas-limit=20000000 \
         --function="prepareRewards" \
         --proxy=${PROXY} --chain=${CHAIN} --send || return
 }

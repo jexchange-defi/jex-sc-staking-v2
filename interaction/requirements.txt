@@ -1,2 +1,2 @@
 more-itertools>=9.0.0
-multiversx-sdk-cli==6.0.1
+multiversx-sdk-cli==7.3.0
