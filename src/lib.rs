@@ -37,6 +37,9 @@ pub trait ScStaking:
             .set_if_empty(RoundState::HoldersSnapshot);
     }
 
+    #[upgrade]
+    fn upgrade(&self) {}
+
     // owner endpoints
 
     #[only_owner]

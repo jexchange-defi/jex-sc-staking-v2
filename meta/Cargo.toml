@@ -11,4 +11,4 @@ authors = [ "Aurélien Passion <aurelien.passion@gmail.com>",]
 path = ".."
 
 [dependencies.multiversx-sc-meta]
-version = "0.41.0"
+version = "0.46.1"
