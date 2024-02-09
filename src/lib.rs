@@ -1,7 +1,9 @@
 #![no_std]
 
+mod jexchange_lps_sc_proxy;
 mod rewards;
 mod snapshots;
+mod swap;
 mod tokens;
 
 multiversx_sc::imports!();
@@ -26,7 +28,7 @@ pub enum RoundState {
 
 #[multiversx_sc::derive::contract]
 pub trait ScStaking:
-    rewards::RewardsModule + snapshots::SnapshotsModule + tokens::TokensModule
+    rewards::RewardsModule + snapshots::SnapshotsModule + swap::SwapModule + tokens::TokensModule
 {
     // init
 
@@ -90,6 +92,8 @@ pub trait ScStaking:
         self.require_snapshot_period();
 
         self.fund_rewards_internal();
+
+        self.swap_wegld_to_jex();
     }
 
     #[only_owner]
