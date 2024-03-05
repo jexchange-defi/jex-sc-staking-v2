@@ -2,9 +2,7 @@ import argparse
 import datetime
 import getpass
 import logging
-import os
 from itertools import chain, groupby
-from typing import Tuple
 
 import requests
 from more_itertools import grouper
@@ -50,16 +48,17 @@ GAS_LIMIT_BASE = 20_000_000
 GAS_LIMIT_PER_ADDRESS = 1_500_000
 NFT_HOLDING_JEX_EQIV = 100_000
 
+# curl https://api.jexchange.io/pools/v3 | jq '.[] | "\(.lp_token.identifier) \(.usd_value_per_lp_token)"'
 # USD value of 1 LP token / 100 = multiplier
-LP_MULTIPLIERS = [("LPETHBTC-8b8a1f", 1.13),
-                  ("LPETHEGLD-bcb4ac", 1.14),
-                  ("LPJEXWETH-2a2e52", 1.03),
-                  ("LPJEXUSDT-732142", 0.96),
-                  ("LPJEXWEGLD-2bccc4", 1.11),
-                  ("LPJEXBEE-a6fd37", 77.56),
-                  ("LPJEXRARE-518166", 1.05),
-                  ("LPJACKCOAT-d49dd4", 0.10),
-                  ("LPUSDCUSDT-fd8cf1", 0.01026),
+LP_MULTIPLIERS = [("LPETHBTC-8b8a1f", 1.43),
+                  ("LPETHEGLD-bcb4ac", 1.37),
+                  ("LPJEXWETH-2a2e52", 1.21),
+                  ("LPJEXUSDT-732142", 1.01),
+                  ("LPJEXWEGLD-2bccc4", 1.27),
+                  ("LPJEXBEE-a6fd37", 80.34),
+                  ("LPJEXRARE-518166", 1.12),
+                  ("LPJACKCOAT-d49dd4", 0.12),
+                  ("LPUSDCUSDT-fd8cf1", 0.01025),
                   ("LPJEX3USD-25e943", 0.01)]
 LPS_POOL_SIZE = 100_000_000 * 10**18
 
