@@ -50,13 +50,13 @@ NFT_HOLDING_JEX_EQIV = 100_000
 
 # curl https://api.jexchange.io/pools/v3 | jq '.[] | "\(.lp_token.identifier) \(.usd_value_per_lp_token)"'
 # USD value of 1 LP token / 100 = multiplier
-LP_MULTIPLIERS = [("LPETHBTC-8b8a1f", 1.34),
-                  ("LPETHEGLD-bcb4ac", 1.0),
-                  ("LPJEXWETH-2a2e52", 1.17),
-                  ("LPJEXUSDT-732142", 1.03),
-                  ("LPJEXWEGLD-2bccc4", 0.99),
-                  ("LPJEXBEE-a6fd37", 60.13),
-                  ("LPJEXRARE-518166", 0.94),
+LP_MULTIPLIERS = [("LPETHBTC-8b8a1f", 1.39),
+                  ("LPETHEGLD-bcb4ac", 1.07),
+                  ("LPJEXWETH-2a2e52", 1.22),
+                  ("LPJEXUSDT-732142", 1.06),
+                  ("LPJEXWEGLD-2bccc4", 1.07),
+                  ("LPJEXBEE-a6fd37", 63.61),
+                  ("LPJEXRARE-518166", 0.97),
                   ("LPJACKCOAT-d49dd4", 0.08),
                   ("LPUSDCUSDT-fd8cf1", 0.0103),
                   ("LPJEX3USD-25e943", 0.0101)]
