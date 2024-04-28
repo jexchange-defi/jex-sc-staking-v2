@@ -47,17 +47,6 @@ SNAPSHOT_CHUNK_SIZE = 100
 GAS_LIMIT_BASE = 20_000_000
 GAS_LIMIT_PER_ADDRESS = 1_500_000
 NFT_HOLDING_JEX_EQIV = 100_000
-
-LP_MULTIPLIERS = [("LPJEXWEGLD-2bccc4", 2),
-                  ("LPJEXWETH-2a2e52", 2),
-                  ("LPJEXUSDT-732142", 2),
-                  ("LPJEXRARE-518166", 1.5),
-                  ("LPJEXBEE-a6fd37", 1.5),
-                  ("LPETHEGLD-bcb4ac", 1),
-                  ("LPETHBTC-8b8a1f", 1),
-                  ("LPUSDCUSDT-fd8cf1", 1),
-                  ("LPJEX3USD-25e943", 1)]
-
 LPS_POOL_SIZE = 100_000_000 * 10**18
 
 
@@ -161,7 +150,10 @@ def _fetch_jex_lp_holders(api_url: str,
 
     all_holders = []
 
-    for (token_id, multiplier) in LP_MULTIPLIERS:
+    for pool_info in pools_info:
+        token_id = pool_info['lp_token_identifier']
+        multiplier = pool_info['earn_multiplier']
+
         LOG.info(f'Fetching holders of {token_id} (x{multiplier})')
 
         pool_info = next((p for p in pools_info
@@ -223,10 +215,8 @@ def _fetch_pools_info():
 
     json_ = resp.json()
 
-    allowed_lp_token_identifiers = [t for t, _ in LP_MULTIPLIERS]
-
     pools_info = [p for p in json_
-                  if p['lp_token_identifier'] in allowed_lp_token_identifiers]
+                  if p['earn_multiplier'] > 0]
 
     return pools_info
 
@@ -247,7 +237,7 @@ def _export_holders(api_url: str,
     LOG.info('Pools')
     for p in pools_info:
         LOG.info(
-            f"{p['lp_token_identifier']} :: {p['reserves_usd_value']} :: $ {p['usd_value_per_lp_token']}")
+            f"{p['lp_token_identifier']} :: {p['reserves_usd_value']} :: $ {p['usd_value_per_lp_token']} :: X{p['earn_multiplier']}")
 
     input('Press Enter to continue')
 
