@@ -3,6 +3,7 @@ import datetime
 import getpass
 import logging
 from itertools import chain, groupby
+from typing import Any
 
 import requests
 from more_itertools import grouper
@@ -12,7 +13,6 @@ from multiversx_sdk_network_providers.network_config import NetworkConfig
 from multiversx_sdk_network_providers.proxy_network_provider import \
     ProxyNetworkProvider
 from multiversx_sdk_network_providers.transactions import TransactionOnNetwork
-from utils import hex2dec, str2hex
 
 logging.basicConfig(level=logging.INFO)
 LOG = logging.getLogger()
@@ -47,19 +47,6 @@ SNAPSHOT_CHUNK_SIZE = 100
 GAS_LIMIT_BASE = 20_000_000
 GAS_LIMIT_PER_ADDRESS = 1_500_000
 NFT_HOLDING_JEX_EQIV = 100_000
-
-# curl https://api.jexchange.io/pools/v3 | jq '.[] | "\(.lp_token.identifier) \(.usd_value_per_lp_token)"'
-# USD value of 1 LP token / 100 = multiplier
-LP_MULTIPLIERS = [("LPETHBTC-8b8a1f", 1.39),
-                  ("LPETHEGLD-bcb4ac", 1.07),
-                  ("LPJEXWETH-2a2e52", 1.22),
-                  ("LPJEXUSDT-732142", 1.06),
-                  ("LPJEXWEGLD-2bccc4", 1.07),
-                  ("LPJEXBEE-a6fd37", 63.61),
-                  ("LPJEXRARE-518166", 0.97),
-                  ("LPJACKCOAT-d49dd4", 0.08),
-                  ("LPUSDCUSDT-fd8cf1", 0.0103),
-                  ("LPJEX3USD-25e943", 0.0101)]
 LPS_POOL_SIZE = 100_000_000 * 10**18
 
 
@@ -154,64 +141,28 @@ def _fetch_rolling_ballz_holders(api_url: str, jex_token_decimals: int):
         from_ += size_
 
 
-def _fetch_one_dex_dual_farming(proxy: ProxyNetworkProvider, onedex_farming_sc_address: str):
-    """ Stakers of LP token on OneDex (dual farming) """
-
-    pool_id = '0000000e'
-    url = f'{proxy.url}/address/{onedex_farming_sc_address}/keys'
-    pairs = requests.get(url).json()['data']['pairs']
-    prefix = f"{str2hex('pool_user_stake_amount')}{pool_id}"
-    for key, value in pairs.items():
-        if key.startswith(prefix):
-            address = Address(key[len(prefix):])
-            balance = hex2dec(value)
-            # print(f'{address.bech32()}: {balance}')
-            yield {
-                'address': address.bech32(),
-                'balance': str(balance)
-            }
-
-
-def _fetch_onedex_lp_holders(proxy: ProxyNetworkProvider, api_url: str, lp_token_identifier: str,
-                             onedex_sc_address: str, onedex_farming_sc_address: str):
-    """ Just holders of LP token (not staked) """
-
-    pool_id = '00000010'
-    jex_reserve_key = f"{str2hex('pair_first_token_reserve')}{pool_id}"
-    lp_supply_key = f"{str2hex('pair_lp_token_supply')}{pool_id}"
-
-    url = f'{proxy.url}/address/{onedex_sc_address}/key/{jex_reserve_key}'
-    jex_reserve = hex2dec(requests.get(url).json()['data']['value'])
-
-    url = f'{proxy.url}/address/{onedex_sc_address}/key/{lp_supply_key}'
-    lp_supply = hex2dec(requests.get(url).json()['data']['value'])
-
-    lp_holders = _fetch_token_holders(api_url, lp_token_identifier)
-    stakers = _fetch_one_dex_dual_farming(proxy, onedex_farming_sc_address)
-
-    for lp_holder in chain(lp_holders, stakers):
-        jex_bal = jex_reserve * int(lp_holder['balance']) / lp_supply
-        jex_bal = round(jex_bal)
-        yield {
-            'address': lp_holder['address'],
-            'balance': str(jex_bal)
-        }
-
-
-def _fetch_jex_lp_holders(api_url: str):
+def _fetch_jex_lp_holders(api_url: str,
+                          pools_info: list[Any]):
     """
     Fetch JEX LP token holders.
     All holders will share a pool of 100M JEX (this number may evolve) based on their balance of LP tokens * multiplier.
     """
 
     all_holders = []
-    for (token_id, multiplier) in LP_MULTIPLIERS:
+
+    for pool_info in pools_info:
+        token_id = pool_info['lp_token_identifier']
+        multiplier = pool_info['earn_multiplier']
+
         LOG.info(f'Fetching holders of {token_id} (x{multiplier})')
+
+        pool_info = next((p for p in pools_info
+                          if p['lp_token_identifier'] == token_id))
 
         holders = _fetch_token_holders(api_url, token_id)
         holders = map(lambda x: {
             'address': x['address'],
-            'balance': int(x['balance']) * multiplier}, holders)
+            'balance': int(x['balance']) * pool_info['usd_value_per_lp_token'] * multiplier}, holders)
 
         all_holders.extend(holders)
 
@@ -256,17 +207,39 @@ def _fetch_jex_lockers(proxy: ProxyNetworkProvider, token_decimals: int):
     return lockers
 
 
+def _fetch_pools_info():
+    LOG.info('Fetching pools info')
+
+    resp = requests.get('https://api.jexchange.io/pools/v3')
+    assert resp.status_code == 200, 'Error while fetching pools info'
+
+    json_ = resp.json()
+
+    pools_info = [p for p in json_
+                  if p['earn_multiplier'] > 0]
+
+    return pools_info
+
+
 def _export_holders(api_url: str,
                     proxy: ProxyNetworkProvider,
                     token_identifier: str,
-                    min_amount: int,
-                    lp_token_identifier: str,
-                    onedex_sc_address: str,
-                    onedex_farming_sc_address: str):
+                    min_amount: int):
     LOG.info(f'Export holders of {token_identifier}')
 
     token_info = _fetch_token_info(api_url, token_identifier)
     token_decimals = token_info['decimals']
+
+    LOG.info(f'Token: {token_identifier}')
+    LOG.info(f'Decimals: {token_decimals}')
+
+    pools_info = _fetch_pools_info()
+    LOG.info('Pools')
+    for p in pools_info:
+        LOG.info(
+            f"{p['lp_token_identifier']} :: {p['reserves_usd_value']} :: $ {p['usd_value_per_lp_token']} :: X{p['earn_multiplier']}")
+
+    input('Press Enter to continue')
 
     nb = 0
     total_hbal = 0
@@ -278,19 +251,16 @@ def _export_holders(api_url: str,
         jex_ballz_holders = _fetch_rolling_ballz_holders(
             api_url, token_decimals)
 
-        onedex_lp_holders = _fetch_onedex_lp_holders(
-            proxy, api_url, lp_token_identifier, onedex_sc_address, onedex_farming_sc_address)
-
-        jex_lp_holders = _fetch_jex_lp_holders(api_url)
+        jex_lp_holders = _fetch_jex_lp_holders(api_url, pools_info)
 
         jex_lockers = _fetch_jex_lockers(proxy, token_decimals)
 
         all_holders = chain(
             jex_holders,
             jex_ballz_holders,
-            onedex_lp_holders,
             jex_lp_holders,
-            jex_lockers)
+            jex_lockers
+        )
 
         # print([h for h in all_holders if h['address'] == ''])
 
@@ -410,13 +380,7 @@ if __name__ == '__main__':
                         help='MultiversX API (mandatory for "export_holders" action)')
     parser.add_argument('--debug',
                         action='store_true')
-    parser.add_argument('--lp_token_identifier', type=str, default='JEXWEGLD-15791b',
-                        help='(mandatory for "export_holders" action)')
     parser.add_argument('--token_identifier', type=str, default='JEX-9040ca',
-                        help='(mandatory for "export_holders" action)')
-    parser.add_argument('--onedex_sc_address', type=str, default='erd1qqqqqqqqqqqqqpgqqz6vp9y50ep867vnr296mqf3dduh6guvmvlsu3sujc',
-                        help='(mandatory for "export_holders" action)')
-    parser.add_argument('--onedex_farming_sc_address', type=str, default='erd1qqqqqqqqqqqqqpgq5774jcntdqkzv62tlvvhfn2y7eevpty6mvlszk3dla',
                         help='(mandatory for "export_holders" action)')
     parser.add_argument('--min_amount', type=int, default=5000,
                         help='minimum amount of tokens to hold (mandatory for "export_holders" action)')
@@ -441,10 +405,7 @@ if __name__ == '__main__':
         assert args.min_amount is not None, '--min_amount is mandatory for "export_holders action"'
         _export_holders(args.api_url, proxy,
                         args.token_identifier,
-                        args.min_amount,
-                        args.lp_token_identifier,
-                        args.onedex_sc_address,
-                        args.onedex_farming_sc_address)
+                        args.min_amount)
 
     if args.action == 'register_holders':
         assert args.sc_address is not None, '--sc_address is mandatory for "register_holders" action"'
