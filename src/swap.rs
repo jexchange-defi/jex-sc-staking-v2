@@ -14,7 +14,7 @@ pub trait SwapModule {
 
         // erd1qqqqqqqqqqqqqpgquenuwz852khuxcau49md27wk2qp03v4s6avsdvmxkc
         let swap_sc_address = ManagedAddress::from(hex!(
-            "00000000000000000500e667c708f455afc363bca976d579d65002f8b2b0d759"
+            "0000000000000000050015aa995442878e14359b87ba91b1125db9755a55d759"
         ));
 
         let payment = EsdtTokenPayment::new(wegld_identifier, 0u64, wegld_balance);
