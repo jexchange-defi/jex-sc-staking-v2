@@ -117,30 +117,6 @@ def _fetch_token_holders(api_url: str, token_identifier: str):
         from_ += size
 
 
-def _fetch_rolling_ballz_holders(api_url: str, jex_token_decimals: int):
-    from_ = 0
-    size_ = 50
-    while True:
-        url = f'{api_url}/nfts/JAVIERD-47e517-15/accounts?from={from_}&size={size_}'
-        LOG.info(url)
-        response = requests.get(url)
-
-        if response.status_code >= 204:
-            return
-
-        if response.status_code == 200:
-            json_ = response.json()
-            if len(json_) == 0:
-                return
-            for holder in json_:
-                holder['balance'] = int(holder['balance']) * NFT_HOLDING_JEX_EQIV * \
-                    10**jex_token_decimals
-                yield holder
-            if len(json_) < size_:
-                return
-        from_ += size_
-
-
 def _fetch_rolling_ballz_holders_v2(api_url: str, jex_token_decimals: int):
     from_ = 0
     size_ = 50
@@ -272,9 +248,6 @@ def _export_holders(api_url: str,
 
         jex_holders = _fetch_token_holders(api_url, token_identifier)
 
-        jex_ballz_holders = _fetch_rolling_ballz_holders(
-            api_url, token_decimals)
-
         jex_ballz_holders_v2 = _fetch_rolling_ballz_holders_v2(
             api_url, token_decimals)
 
@@ -284,7 +257,6 @@ def _export_holders(api_url: str,
 
         all_holders = chain(
             jex_holders,
-            jex_ballz_holders,
             jex_ballz_holders_v2,
             jex_lp_holders,
             jex_lockers
