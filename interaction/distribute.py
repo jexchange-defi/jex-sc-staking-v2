@@ -50,7 +50,8 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--debug', action='store_true')
-    parser.add_argument('--sc_address', type=str, required=True,
+    parser.add_argument('--sc_address', type=str,
+                        default='erd1qqqqqqqqqqqqqpgqwkqnf30j7hj4r797kahr0p5t5nsksc8a73eqd732jd',
                         help='Staking smart contract address')
     parser.add_argument('--keyfile', type=str, required=True,
                         help='User key file')
