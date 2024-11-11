@@ -96,7 +96,7 @@ def _fetch_token_info(api_url: str, token_identifier: str):
 
 def _fetch_token_holders(api_url: str, token_identifier: str):
     from_ = 0
-    size = 1000
+    size = 10000
     while True:
         url = f'{api_url}/tokens/{token_identifier}/accounts?from={from_}&size={size}'
         LOG.info(url)
