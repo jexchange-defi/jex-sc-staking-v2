@@ -22,8 +22,7 @@ pub trait SwapModule {
         self.jexchange_lps_sc_proxy(swap_sc_address)
             .swap_tokens_fixed_input(BigUint::from(2u64))
             .with_esdt_transfer(payment)
-            .async_call()
-            .call_and_exit_ignore_callback();
+            .async_call_and_exit();
     }
 
     #[proxy]
