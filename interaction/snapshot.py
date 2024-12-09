@@ -89,8 +89,9 @@ def _fetch_token_info(api_url: str, token_identifier: str):
 
     json_ = resp.json()
     return {
-        'token_identifier': token_identifier,
-        'decimals': json_['decimals']
+        'identifier': token_identifier,
+        'decimals': json_['decimals'],
+        'usdPrice': json_['price']
     }
 
 
@@ -142,7 +143,8 @@ def _fetch_rolling_ballz_holders_v2(api_url: str, jex_token_decimals: int):
 
 
 def _fetch_jex_lp_holders(api_url: str,
-                          pools_info: list[Any]):
+                          pools_info: list[Any],
+                          jex_info: Any):
     """
     Fetch JEX LP token holders.
     All holders will share a pool of 100M JEX (this number may evolve) based on their balance of LP tokens * multiplier.
@@ -159,10 +161,12 @@ def _fetch_jex_lp_holders(api_url: str,
         pool_info = next((p for p in pools_info
                           if p['lp_token_identifier'] == token_id))
 
+        share_usd_value = pool_info['usd_value_per_lp_token']
+
         holders = _fetch_token_holders(api_url, token_id)
         holders = map(lambda x: {
             'address': x['address'],
-            'balance': int(x['balance']) * pool_info['usd_value_per_lp_token'] * multiplier}, holders)
+            'balance': int(x['balance']) * share_usd_value * multiplier}, holders)
 
         all_holders.extend(holders)
 
@@ -229,15 +233,34 @@ def _export_holders(api_url: str,
 
     token_info = _fetch_token_info(api_url, token_identifier)
     token_decimals = token_info['decimals']
+    token_price = token_info['usdPrice']
 
     LOG.info(f'Token: {token_identifier}')
     LOG.info(f'Decimals: {token_decimals}')
+    LOG.info(f'Price: {token_price}')
 
     pools_info = _fetch_pools_info()
+
+    LOG.info('Fix USD value of LP tokens')
+    pools_info = [_fix_pool_usd_value(p, jex_info=token_info)
+                  for p in pools_info
+                  if int(p['lp_token_supply']) > 0]
+
     LOG.info('Pools')
     for p in pools_info:
-        LOG.info(
-            f"{p['lp_token_identifier']} :: {p['reserves_usd_value']} :: $ {p['usd_value_per_lp_token']} :: X{p['earn_multiplier']}")
+        sum_usd_values = sum(p['reserves_usd_value'])
+        corrected_sum_usd_values = p['usd_value_per_lp_token'] * \
+            int(p['lp_token_supply']) / 10**p['lp_token']['decimals']
+        diff = abs(corrected_sum_usd_values - sum_usd_values)
+        diff_percent = diff / sum_usd_values
+
+        LOG.info(f"{p['lp_token_identifier']}"
+                 f" :: {['{:.2f}'.format(x) for x in p['reserves_usd_value']]}"
+                 f" :: {sum_usd_values:.2f}"
+                 f" :: {corrected_sum_usd_values:.2f}"
+                 f" :: {p['usd_value_per_lp_token']:.2f}"
+                 f" :: X{p['earn_multiplier']}"
+                 f" :: {'OK' if diff_percent < 1 else 'CHECK ****'}")
 
     input('Press Enter to continue')
 
@@ -251,7 +274,9 @@ def _export_holders(api_url: str,
         jex_ballz_holders_v2 = _fetch_rolling_ballz_holders_v2(
             api_url, token_decimals)
 
-        jex_lp_holders = _fetch_jex_lp_holders(api_url, pools_info)
+        jex_lp_holders = _fetch_jex_lp_holders(api_url,
+                                               pools_info,
+                                               jex_info=token_info)
 
         jex_lockers = _fetch_jex_lockers(proxy, token_decimals)
 
@@ -291,6 +316,27 @@ def _export_holders(api_url: str,
             total_hbal += hbal
 
     LOG.info(f'Total points: {int(total_hbal):,}')
+
+
+def _fix_pool_usd_value(pool_info: Any,
+                        jex_info: Any):
+    val = pool_info['usd_value_per_lp_token']
+
+    if pool_info['type'] == 'CONSTANT_PRODUCT':
+        jex_reserve_usd_value = next((r
+                                      for t, r in zip(pool_info['tokens'],
+                                                      pool_info['reserves_usd_value'])
+                                      if t['identifier'] == jex_info['identifier']),
+                                     None)
+        if jex_reserve_usd_value is not None:
+            val = jex_reserve_usd_value \
+                * len(pool_info['tokens']) \
+                * 10**pool_info['lp_token']['decimals'] \
+                / int(pool_info['lp_token_supply'])
+
+    pool_info['usd_value_per_lp_token'] = val
+
+    return pool_info
 
 
 def _register_holders(proxy: ProxyNetworkProvider, network: NetworkConfig, sc_address, holders):
