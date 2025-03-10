@@ -246,7 +246,8 @@ def _export_holders(api_url: str,
     LOG.info('Fix USD value of LP tokens')
     pools_info = [_fix_pool_usd_value(p, jex_info=token_info)
                   for p in pools_info
-                  if int(p['lp_token_supply']) > 0]
+                  if int(p['lp_token_supply']) > 0
+                  and sum(p['reserves_usd_value']) >= 10]
 
     LOG.info('Pools')
     for p in pools_info:
