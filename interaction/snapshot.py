@@ -64,14 +64,16 @@ def _parse_address_and_lock(hex_: str):
     len_ = int(hex_[offset: offset+8], base=16)
     offset += 8
 
-    # locked_amount = int(hex_[offset: offset + 2*len_], base=16)
+    locked_amount = int(hex_[offset: offset + 2*len_], base=16)
     offset += 2 * len_  # locked amount
 
     offset += 16  # unlock epoch
-    offset += 16  # remaining_epochs
-    offset += 8  # len reward power
 
-    reward_power = int(hex_[offset:], base=16)
+    remaining_epochs = int(hex_[offset: offset+16], base=16)
+    offset += 16  # remaining_epochs
+
+    remaining_epochs_maxxed = max(0, min(remaining_epochs, 180))
+    reward_power = (locked_amount * remaining_epochs_maxxed * 4) // 180
 
     return {
         'address': address.bech32(),
@@ -269,8 +271,6 @@ def _export_holders(api_url: str,
 
     with open(HOLDERS_FILENAME, 'wt') as out:
 
-        jex_holders = _fetch_token_holders(api_url, token_identifier)
-
         jex_ballz_holders_v2 = _fetch_rolling_ballz_holders_v2(
             api_url, token_decimals)
 
@@ -281,7 +281,6 @@ def _export_holders(api_url: str,
         jex_lockers = _fetch_jex_lockers(proxy, token_decimals)
 
         all_holders = chain(
-            jex_holders,
             jex_ballz_holders_v2,
             jex_lp_holders,
             jex_lockers
