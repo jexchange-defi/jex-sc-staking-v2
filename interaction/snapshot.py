@@ -41,13 +41,13 @@ IGNORED_ADDRESS = [
     'erd1n0y5vzjv7hvuh4nj3acjcgh7frsfxjc3gq6nucx2numfjkhja0fqn7w3us'
 ]
 
+JEX_LOCKER_SC_ADDRESS = 'erd1qqqqqqqqqqqqqpgq05whpg29ggrrm9ww3ufsf9ud23f66msv6avs5s5xxy'
 HOLDERS_FILENAME = '.holders.csv'
 REPORT_FILENAME = '.report.txt'
 SNAPSHOT_CHUNK_SIZE = 100
 GAS_LIMIT_BASE = 20_000_000
 GAS_LIMIT_PER_ADDRESS = 1_500_000
 NFT_HOLDING_JEX_EQIV = 100_000
-LPS_POOL_SIZE = 100_000_000 * 10**18
 
 
 def _is_valid_holder(address: str) -> bool:
@@ -121,27 +121,40 @@ def _fetch_token_holders(api_url: str, token_identifier: str):
 
 
 def _fetch_rolling_ballz_holders_v2(api_url: str, jex_token_decimals: int):
+    all_holders = []
+
     from_ = 0
     size_ = 50
+
     while True:
         url = f'{api_url}/nfts/JAVIERD-47e517-16/accounts?from={from_}&size={size_}'
         LOG.info(url)
         response = requests.get(url)
 
         if response.status_code >= 204:
-            return
+            break
 
         if response.status_code == 200:
             json_ = response.json()
+
             if len(json_) == 0:
-                return
+                break
+
             for holder in json_:
                 holder['balance'] = int(holder['balance']) * NFT_HOLDING_JEX_EQIV * \
                     10**jex_token_decimals
-                yield holder
+                all_holders.append(holder)
+
             if len(json_) < size_:
-                return
+                break
+
         from_ += size_
+
+    LOG.info(f'Nb NFT holders: {len(all_holders)}')
+    LOG.info('Total reward power from NFT holders: '
+             f"{int(sum((h['balance'] for h in all_holders))):,}")
+
+    return all_holders
 
 
 def _fetch_jex_lp_holders(api_url: str,
@@ -155,38 +168,35 @@ def _fetch_jex_lp_holders(api_url: str,
     all_holders = []
 
     for pool_info in pools_info:
-        token_id = pool_info['lp_token_identifier']
-        multiplier = pool_info['earn_multiplier']
+        lp_token_id = pool_info['lp_token_identifier']
 
-        LOG.info(f'Fetching holders of {token_id} (x{multiplier})')
+        LOG.info(f'Fetching holders of {lp_token_id}')
 
         pool_info = next((p for p in pools_info
-                          if p['lp_token_identifier'] == token_id))
+                          if p['lp_token_identifier'] == lp_token_id))
 
-        share_usd_value = pool_info['usd_value_per_lp_token']
+        jex_reserve = next((r
+                            for (i, (r, t)) in enumerate(zip(pool_info['reserves'], pool_info['tokens']))
+                            if t['identifier'] == jex_info['identifier']))
 
-        holders = _fetch_token_holders(api_url, token_id)
+        holders = _fetch_token_holders(api_url, lp_token_id)
         holders = map(lambda x: {
             'address': x['address'],
-            'balance': int(x['balance']) * share_usd_value * multiplier}, holders)
+            'balance': int(jex_reserve) * int(x['balance']) / int(pool_info['lp_token_supply'])}, holders)
 
         all_holders.extend(holders)
 
-    sum_balances = sum(map(lambda x: x['balance'], all_holders))
-    groups = groupby(all_holders, lambda x: x['address'])
+    LOG.info(f'Nb liquidity providers: {len(all_holders)}')
+    LOG.info('Total reward power from liquidity providers: '
+             f"{int(sum((h['balance'] for h in all_holders))):,}")
 
-    for (address, data) in groups:
-        yield {
-            'address': address,
-            'balance': sum(map(lambda x: LPS_POOL_SIZE * x['balance'] / sum_balances, data))
-        }
+    return all_holders
 
 
 def _fetch_jex_lockers(proxy: ProxyNetworkProvider, token_decimals: int):
     LOG.info('Fetch JEX lockers')
 
-    sc = SmartContract(
-        'erd1qqqqqqqqqqqqqpgq05whpg29ggrrm9ww3ufsf9ud23f66msv6avs5s5xxy')
+    sc = SmartContract(JEX_LOCKER_SC_ADDRESS)
 
     from_ = 0
     size_ = 200
@@ -213,7 +223,7 @@ def _fetch_jex_lockers(proxy: ProxyNetworkProvider, token_decimals: int):
     return lockers
 
 
-def _fetch_pools_info():
+def _fetch_pools_info(token_identifier: str):
     LOG.info('Fetching pools info')
 
     resp = requests.get('https://api.jexchange.io/pools/v3')
@@ -221,10 +231,12 @@ def _fetch_pools_info():
 
     json_ = resp.json()
 
-    pools_info = [p for p in json_
-                  if p['earn_multiplier'] > 0]
-
-    return pools_info
+    return [p
+            for p in json_
+            if not p['paused']
+            and int(p['lp_token_supply']) > 0
+            and any((t['identifier'] == token_identifier
+                     for t in p['tokens']))]
 
 
 def _export_holders(api_url: str,
@@ -241,31 +253,7 @@ def _export_holders(api_url: str,
     LOG.info(f'Decimals: {token_decimals}')
     LOG.info(f'Price: {token_price}')
 
-    pools_info = _fetch_pools_info()
-
-    LOG.info('Fix USD value of LP tokens')
-    pools_info = [_fix_pool_usd_value(p, jex_info=token_info)
-                  for p in pools_info
-                  if int(p['lp_token_supply']) > 0
-                  and sum(p['reserves_usd_value']) >= 10]
-
-    LOG.info('Pools')
-    for p in pools_info:
-        sum_usd_values = sum(p['reserves_usd_value'])
-        corrected_sum_usd_values = p['usd_value_per_lp_token'] * \
-            int(p['lp_token_supply']) / 10**p['lp_token']['decimals']
-        diff = abs(corrected_sum_usd_values - sum_usd_values)
-        diff_percent = diff / sum_usd_values
-
-        LOG.info(f"{p['lp_token_identifier']}"
-                 f" :: {['{:.2f}'.format(x) for x in p['reserves_usd_value']]}"
-                 f" :: {sum_usd_values:.2f}"
-                 f" :: {corrected_sum_usd_values:.2f}"
-                 f" :: {p['usd_value_per_lp_token']:.2f}"
-                 f" :: X{p['earn_multiplier']}"
-                 f" :: {'OK' if diff_percent < 1 else 'CHECK ****'}")
-
-    input('Press Enter to continue')
+    pools_info = _fetch_pools_info(token_identifier)
 
     nb = 0
     total_hbal = 0
@@ -289,8 +277,10 @@ def _export_holders(api_url: str,
 
         # print([h for h in all_holders if h['address'] == ''])
 
-        all_holders = filter(
-            lambda x: _is_valid_holder(x['address']), all_holders)
+        all_holders = (h
+                       for h in all_holders
+                       if _is_valid_holder(h['address']))
+
         all_holders = sorted(all_holders, key=lambda x: x['address'])
 
         groups = groupby(all_holders, lambda x: x['address'])
@@ -316,27 +306,6 @@ def _export_holders(api_url: str,
             total_hbal += hbal
 
     LOG.info(f'Total points: {int(total_hbal):,}')
-
-
-def _fix_pool_usd_value(pool_info: Any,
-                        jex_info: Any):
-    val = pool_info['usd_value_per_lp_token']
-
-    if pool_info['type'] == 'CONSTANT_PRODUCT':
-        jex_reserve_usd_value = next((r
-                                      for t, r in zip(pool_info['tokens'],
-                                                      pool_info['reserves_usd_value'])
-                                      if t['identifier'] == jex_info['identifier']),
-                                     None)
-        if jex_reserve_usd_value is not None:
-            val = jex_reserve_usd_value \
-                * len(pool_info['tokens']) \
-                * 10**pool_info['lp_token']['decimals'] \
-                / int(pool_info['lp_token_supply'])
-
-    pool_info['usd_value_per_lp_token'] = val
-
-    return pool_info
 
 
 def _register_holders(proxy: ProxyNetworkProvider, network: NetworkConfig, sc_address, holders):
