@@ -1,5 +1,7 @@
 interaction/deploy-*.json
 interaction/\.*
+interaction/report.txt
+interaction/snapshot.csv
 interaction/__pycache__/*
 wallets/*
 

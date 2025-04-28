@@ -1,7 +1,6 @@
 import argparse
 import datetime
 import getpass
-import json
 import logging
 from itertools import chain, groupby
 from typing import Any, Mapping
@@ -42,8 +41,8 @@ IGNORED_ADDRESS = [
     'erd1n0y5vzjv7hvuh4nj3acjcgh7frsfxjc3gq6nucx2numfjkhja0fqn7w3us'
 ]
 
-HOLDERS_FILENAME = '.holders.csv'
-REPORT_FILENAME = '.report.txt'
+HOLDERS_FILENAME = 'snapshot.csv'
+REPORT_FILENAME = 'report.txt'
 SNAPSHOT_CHUNK_SIZE = 100
 GAS_LIMIT_BASE = 20_000_000
 GAS_LIMIT_PER_ADDRESS = 1_500_000
