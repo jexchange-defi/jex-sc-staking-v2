@@ -84,7 +84,7 @@ def _parse_address_and_lock(hex_: str):
 def _fetch_token_prices() -> Mapping[str, float]:
     LOG.info('Fetching token prices')
 
-    api_key = input('Agg API key: ')
+    api_key = input('Aggregator API key: ')
 
     url = 'https://agg-api.jexchange.io/tokens'
     LOG.debug(f'url={url}')
@@ -303,6 +303,8 @@ def _export_holders(api_url: str,
 
     with open(HOLDERS_FILENAME, 'wt') as out:
 
+        out.write("index;address;points;nb_ballz;reward_power;usd_balance;shares\n")
+
         jex_ballz_holders_v2 = _fetch_rolling_ballz_holders_v2(api_url)
 
         total_nb_ballz = sum(h["nb_ballz"] for h in jex_ballz_holders_v2)
@@ -359,9 +361,11 @@ def _export_holders(api_url: str,
             nb_ballz = sum((x.get('nb_ballz', 0) for x in data))
             reward_power = sum((x.get('reward_power', 0) for x in data))
             usd_balance = sum((x.get('usd_balance', 0) for x in data))
-            points = (nb_ballz * NFT_HOLDING_JEX_EQIV) \
-                + reward_power \
-                + (total_reward_power * usd_balance / total_lp_holders_usd_value)
+            points = _calculate_points(nb_ballz,
+                                       reward_power,
+                                       total_reward_power,
+                                       usd_balance,
+                                       total_lp_holders_usd_value)
 
             if points >= min_amount:
                 all_holders.append({
@@ -376,16 +380,16 @@ def _export_holders(api_url: str,
                              key=lambda x: x['points'],
                              reverse=True)
 
-        total_points = 0
+        total_points = sum((h['points'] for h in all_holders))
 
         for h in all_holders:
             nb += 1
             points = int(h['points'])
-            line = f"{nb};{h['address']};{points};{h['nb_ballz']};{h['reward_power']:.2f};{h['usd_balance']:.2f}"
+            shares = points / total_points
+            line = f"{nb};{h['address']};{points};{h['nb_ballz']};{h['reward_power']:.2f};{h['usd_balance']:.2f};{shares:.3f}"
             # print(line)
             out.write(line)
             out.write("\n")
-            total_points += points
 
     LOG.info(f'Nb ballz: {total_nb_ballz:,}')
 
@@ -396,6 +400,21 @@ def _export_holders(api_url: str,
              f'{int(total_lp_holders_usd_value):,}')
 
     LOG.info(f'Total points: {int(total_points):,}')
+
+
+def _calculate_points(nb_ballz: int,
+                      reward_power: int,
+                      total_reward_power: int,
+                      usd_balance: float,
+                      total_lp_holders_usd_value: float):
+    """
+    1 JEX rolling ballz = 100k JEX
+    + reward power
+    + shares of provided liquidity (100% liquidity = reward power)
+    """
+    return (nb_ballz * NFT_HOLDING_JEX_EQIV) \
+        + reward_power \
+        + (total_reward_power * usd_balance / total_lp_holders_usd_value)
 
 
 def _fix_pool_usd_value(pool_info: Any,
@@ -425,7 +444,7 @@ def _register_holders(proxy: ProxyNetworkProvider, network: NetworkConfig, sc_ad
         LOG.info(holder['address'])
 
         args.append(Address(holder['address']))
-        args.append(int(holder['balance']))
+        args.append(int(holder['points']))
 
         gas_limit += GAS_LIMIT_PER_ADDRESS
         processed_holders.append(holder['address'])
@@ -472,7 +491,7 @@ def _parse_csv_line(line: str) -> dict:
     arr_ = line.split(';')
     return {
         'address': arr_[1],
-        'balance': arr_[2]
+        'points': arr_[2]
     }
 
 
@@ -486,6 +505,7 @@ def _register_all_holders(proxy: ProxyNetworkProvider, user: Account, sc_address
 
     with open(HOLDERS_FILENAME, 'rt') as holders_file:
         lines = holders_file.readlines()
+        lines = lines[1:]  # skip header
         lines = map(_parse_csv_line, lines)
         chunks = grouper(lines, SNAPSHOT_CHUNK_SIZE, fillvalue=None)
         for chunk in chunks:
