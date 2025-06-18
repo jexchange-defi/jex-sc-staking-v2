@@ -5,10 +5,12 @@ import logging
 from itertools import chain, groupby
 from typing import Any, Mapping
 
+import externals
 import requests
 from more_itertools import grouper
-from multiversx_sdk_cli.accounts import Account, Address
-from multiversx_sdk_cli.contracts import QueryResult, SmartContract
+from multiversx_sdk_core.address import Address
+from multiversx_sdk_cli.accounts import Account
+from multiversx_sdk_cli.contracts import SmartContract
 from multiversx_sdk_network_providers.network_config import NetworkConfig
 from multiversx_sdk_network_providers.proxy_network_provider import \
     ProxyNetworkProvider
@@ -57,7 +59,7 @@ def _is_valid_holder(address: str) -> bool:
 def _parse_address_and_lock(hex_: str):
     offset = 0
 
-    address = Address(hex_[offset: offset+64])
+    address = Address.from_hex(hex_[offset: offset+64], hrp='erd')
     offset += 64
 
     len_ = int(hex_[offset: offset+8], base=16)
@@ -205,23 +207,24 @@ def _fetch_jex_lockers(proxy: ProxyNetworkProvider,
                        token_info: dict):
     LOG.info('Fetch JEX lockers')
 
-    sc = SmartContract(
-        'erd1qqqqqqqqqqqqqpgq05whpg29ggrrm9ww3ufsf9ud23f66msv6avs5s5xxy')
-
     from_ = 0
     size_ = 200
 
     lockers = []
     while True:
-        resp = sc.query(proxy, 'getAllLocks', [from_, size_])
 
-        if len(resp) > 0 and isinstance(resp[0], QueryResult):
-            new_lockers = [_parse_address_and_lock(qr.hex) for qr in resp]
+        resp = externals.sync_sc_query('erd1qqqqqqqqqqqqqpgq05whpg29ggrrm9ww3ufsf9ud23f66msv6avs5s5xxy',
+                                       'getAllLocks',
+                                       [from_, size_])
+
+        if len(resp) > 0:
+            new_lockers = [_parse_address_and_lock(x)
+                           for x in resp]
             lockers.extend(({
                 'address': x['address'],
                 'reward_power': x['reward_power'] / 10**token_info['decimals']
             } for x in new_lockers))
-        elif resp == []:
+        elif len(resp) == 0:
             break
         else:
             LOG.error('Error while fetching lockers')
@@ -442,7 +445,7 @@ def _register_holders(proxy: ProxyNetworkProvider, network: NetworkConfig, sc_ad
     for holder in holders:
         LOG.info(holder['address'])
 
-        args.append(Address(holder['address']))
+        args.append(Address.from_bech32(holder['address']))
         args.append(int(holder['points']))
 
         gas_limit += GAS_LIMIT_PER_ADDRESS
