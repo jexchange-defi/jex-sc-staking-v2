@@ -8,9 +8,13 @@ from typing import Any, Mapping
 import externals
 import requests
 from more_itertools import grouper
-from multiversx_sdk_core.address import Address
 from multiversx_sdk_cli.accounts import Account
 from multiversx_sdk_cli.contracts import SmartContract
+from multiversx_sdk_core import (ContractQueryBuilder, TokenComputer,
+                                 Transaction)
+from multiversx_sdk_core.address import Address
+from multiversx_sdk_core.transaction_factories import (
+    SmartContractTransactionsFactory, TransactionsFactoryConfig)
 from multiversx_sdk_network_providers.network_config import NetworkConfig
 from multiversx_sdk_network_providers.proxy_network_provider import \
     ProxyNetworkProvider
@@ -49,6 +53,10 @@ SNAPSHOT_CHUNK_SIZE = 100
 GAS_LIMIT_BASE = 20_000_000
 GAS_LIMIT_PER_ADDRESS = 1_500_000
 NFT_HOLDING_JEX_EQIV = 100_000
+
+SC_FACTORY = SmartContractTransactionsFactory(
+    TransactionsFactoryConfig('1'),
+    TokenComputer())
 
 
 def _is_valid_holder(address: str) -> bool:
@@ -435,39 +443,43 @@ def _fix_pool_usd_value(pool_info: Any,
     return pool_info
 
 
-def _register_holders(proxy: ProxyNetworkProvider, network: NetworkConfig, sc_address, holders):
+def _register_holders(proxy: ProxyNetworkProvider,
+                      user: Account,
+                      sc_address: Address,
+                      holders):
     LOG.info('Register holders chunk')
 
     gas_limit = GAS_LIMIT_BASE
-    data = 'snapshotHolders'
     processed_holders = []
     args = []
     for holder in holders:
         LOG.info(holder['address'])
 
-        args.append(Address.from_bech32(holder['address']))
+        args.append(Address.from_bech32(holder['address']).get_public_key())
         args.append(int(holder['points']))
 
         gas_limit += GAS_LIMIT_PER_ADDRESS
         processed_holders.append(holder['address'])
-    LOG.debug(f'data={data}')
 
-    sc = SmartContract(sc_address)
-    tx = sc.execute(user, 'snapshotHolders', args, network.min_gas_price,
-                    gas_limit, 0, network.chain_id, network.min_transaction_version,
-                    guardian='', options=0)
+    tx = SC_FACTORY.create_transaction_for_execute(
+        sender=user.address,
+        contract=sc_address,
+        function='snapshotHolders',
+        gas_limit=gas_limit,
+        arguments=args
+    )
+
+    tx.nonce = user.nonce
 
     user.nonce += 1
 
-    tx: TransactionOnNetwork = tx.send_wait_result(
-        proxy, 60)
-    logging.info(f"Transaction: {tx.hash}")
+    tx.signature = bytes.fromhex(user.sign_transaction(tx))
 
-    if tx.is_completed:
-        status = tx.status.status
-    else:
-        status = 'Unknown'
-    _report_add(processed_holders, status)
+    tx_hash = proxy.send_transaction(tx)
+
+    logging.info(f"Transaction: {tx_hash}")
+
+    _report_add(processed_holders, tx_hash)
 
 
 def _report_init():
@@ -480,13 +492,13 @@ def _report_init():
         out.write("\n\n")
 
 
-def _report_add(addresses, status):
+def _report_add(addresses, tx_hash: str):
     LOG.info('Updating report')
 
     with open(REPORT_FILENAME, mode='a') as out:
         out.write('------- CHUNK -------\n')
         for address in addresses:
-            out.write(f"{address};{status};\n")
+            out.write(f"{address};{tx_hash};\n")
 
 
 def _parse_csv_line(line: str) -> dict:
@@ -497,10 +509,11 @@ def _parse_csv_line(line: str) -> dict:
     }
 
 
-def _register_all_holders(proxy: ProxyNetworkProvider, user: Account, sc_address: str):
-    LOG.info(f'Register holders to SC {sc_address}')
+def _register_all_holders(proxy: ProxyNetworkProvider,
+                          user: Account,
+                          sc_address: Address):
+    LOG.info(f'Register holders to SC {sc_address.to_bech32()}')
 
-    network = proxy.get_network_config()
     user.sync_nonce(proxy)
 
     _report_init()
@@ -512,7 +525,7 @@ def _register_all_holders(proxy: ProxyNetworkProvider, user: Account, sc_address
         chunks = grouper(lines, SNAPSHOT_CHUNK_SIZE, fillvalue=None)
         for chunk in chunks:
             chunk = filter(lambda x: x is not None, chunk)
-            _register_holders(proxy, network, sc_address, chunk)
+            _register_holders(proxy, user, sc_address, chunk)
 
 
 if __name__ == '__main__':
@@ -556,5 +569,8 @@ if __name__ == '__main__':
 
         password = getpass.getpass(prompt='Keyfile password: ')
 
+        sc_address = Address.from_bech32(args.sc_address)
+
         user = Account(key_file=args.keyfile, password=password)
-        _register_all_holders(proxy, user, args.sc_address)
+
+        _register_all_holders(proxy, user, sc_address)
