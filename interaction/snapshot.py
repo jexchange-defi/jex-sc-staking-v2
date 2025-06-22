@@ -9,16 +9,12 @@ import externals
 import requests
 from more_itertools import grouper
 from multiversx_sdk_cli.accounts import Account
-from multiversx_sdk_cli.contracts import SmartContract
-from multiversx_sdk_core import (ContractQueryBuilder, TokenComputer,
-                                 Transaction)
+from multiversx_sdk_core import TokenComputer
 from multiversx_sdk_core.address import Address
 from multiversx_sdk_core.transaction_factories import (
     SmartContractTransactionsFactory, TransactionsFactoryConfig)
-from multiversx_sdk_network_providers.network_config import NetworkConfig
 from multiversx_sdk_network_providers.proxy_network_provider import \
     ProxyNetworkProvider
-from multiversx_sdk_network_providers.transactions import TransactionOnNetwork
 
 logging.basicConfig(level=logging.INFO)
 LOG = logging.getLogger()
@@ -253,7 +249,8 @@ def _fetch_pools_info():
     json_ = resp.json()
 
     return [p for p in json_
-            if p['earn_multiplier'] > 0]
+            if p['earn_multiplier'] > 0
+            and all((int(f) > 0 for f in p['fees_last_7_epochs']))]
 
 
 def _export_holders(api_url: str,
