@@ -48,7 +48,6 @@ REPORT_FILENAME = 'report.txt'
 SNAPSHOT_CHUNK_SIZE = 100
 GAS_LIMIT_BASE = 10_000_000
 GAS_LIMIT_PER_ADDRESS = 1_250_000
-NFT_HOLDING_JEX_EQIV = 100_000
 
 SC_FACTORY = SmartContractTransactionsFactory(
     TransactionsFactoryConfig('1'),
@@ -140,40 +139,6 @@ def _fetch_token_holders(api_url: str, token_identifier: str):
         from_ += size
 
 
-def _fetch_rolling_ballz_holders_v2(api_url: str):
-    holders = []
-
-    from_ = 0
-    size_ = 50
-    while True:
-        url = f'{api_url}/nfts/JAVIERD-47e517-16/accounts?from={from_}&size={size_}'
-        LOG.info(url)
-        response = requests.get(url)
-
-        if response.status_code >= 204:
-            break
-
-        if response.status_code == 200:
-            json_ = response.json()
-
-            if len(json_) == 0:
-                break
-
-            for holder in json_:
-                holder['ballz'] = holder['balance']
-                holders.append({
-                    'address': holder['address'],
-                    'nb_ballz': int(holder['balance'])
-                })
-
-            if len(json_) < size_:
-                break
-
-        from_ += size_
-
-    return holders
-
-
 def _fetch_jex_lp_holders(api_url: str,
                           pools_info: list[Any]):
     LOG.info('Fetch LP holders')
@@ -207,8 +172,7 @@ def _fetch_jex_lp_holders(api_url: str,
             for (address, data) in groups]
 
 
-def _fetch_jex_lockers(proxy: ProxyNetworkProvider,
-                       token_info: dict):
+def _fetch_jex_lockers(token_info: dict):
     LOG.info('Fetch JEX lockers')
 
     from_ = 0
@@ -254,7 +218,6 @@ def _fetch_pools_info():
 
 
 def _export_holders(api_url: str,
-                    proxy: ProxyNetworkProvider,
                     token_identifier: str,
                     min_amount: int):
     LOG.info(f'Export holders of {token_identifier}')
@@ -310,19 +273,9 @@ def _export_holders(api_url: str,
 
     with open(HOLDERS_FILENAME, 'wt') as out:
 
-        out.write("index;address;points;nb_ballz;reward_power;usd_balance;shares\n")
+        out.write("index;address;points;reward_power;usd_balance;shares\n")
 
-        jex_ballz_holders_v2 = _fetch_rolling_ballz_holders_v2(api_url)
-
-        total_nb_ballz = sum(h["nb_ballz"] for h in jex_ballz_holders_v2)
-
-        LOG.info(f'Nb ballz holders: {len(jex_ballz_holders_v2)}')
-        LOG.info(f'Nb ballz: {total_nb_ballz:,}')
-
-        input('Press Enter to continue')
-
-        jex_lockers = _fetch_jex_lockers(proxy,
-                                         token_info=token_info)
+        jex_lockers = _fetch_jex_lockers(token_info)
 
         total_reward_power = sum([l['reward_power']
                                   for l in jex_lockers])
@@ -346,7 +299,6 @@ def _export_holders(api_url: str,
         input('Press Enter to continue')
 
         all_holders = chain(
-            jex_ballz_holders_v2,
             jex_lp_holders,
             jex_lockers
         )
@@ -365,11 +317,9 @@ def _export_holders(api_url: str,
         for address, data in groups:
             data = list(data)
 
-            nb_ballz = sum((x.get('nb_ballz', 0) for x in data))
             reward_power = sum((x.get('reward_power', 0) for x in data))
             usd_balance = sum((x.get('usd_balance', 0) for x in data))
-            points = _calculate_points(nb_ballz,
-                                       reward_power,
+            points = _calculate_points(reward_power,
                                        total_reward_power,
                                        usd_balance,
                                        total_lp_holders_usd_value)
@@ -377,7 +327,6 @@ def _export_holders(api_url: str,
             if points >= min_amount:
                 all_holders.append({
                     'address': address,
-                    'nb_ballz': nb_ballz,
                     'reward_power': reward_power,
                     'usd_balance': usd_balance,
                     'points': points
@@ -393,12 +342,10 @@ def _export_holders(api_url: str,
             nb += 1
             points = int(h['points'])
             shares = points / total_points
-            line = f"{nb};{h['address']};{points};{h['nb_ballz']};{h['reward_power']:.2f};{h['usd_balance']:.2f};{shares:.3f}"
+            line = f"{nb};{h['address']};{points};{h['reward_power']:.2f};{h['usd_balance']:.2f};{shares:.3f}"
             # print(line)
             out.write(line)
             out.write("\n")
-
-    LOG.info(f'Nb ballz: {total_nb_ballz:,}')
 
     LOG.info('Total reward power from lockers: '
              f'{int(total_reward_power):,}')
@@ -409,18 +356,15 @@ def _export_holders(api_url: str,
     LOG.info(f'Total points: {int(total_points):,}')
 
 
-def _calculate_points(nb_ballz: int,
-                      reward_power: int,
+def _calculate_points(reward_power: int,
                       total_reward_power: int,
                       usd_balance: float,
                       total_lp_holders_usd_value: float):
     """
-    1 JEX rolling ballz = 100k JEX
-    + reward power
+    Reward power
     + shares of provided liquidity (100% liquidity = reward power)
     """
-    return (nb_ballz * NFT_HOLDING_JEX_EQIV) \
-        + reward_power \
+    return reward_power \
         + (total_reward_power * usd_balance / total_lp_holders_usd_value)
 
 
@@ -556,7 +500,7 @@ if __name__ == '__main__':
         assert args.api_url is not None, '--api_url is mandatory for "export_holders action"'
         assert args.token_identifier is not None, '--token_identifier is mandatory for "export_holders action"'
         assert args.min_amount is not None, '--min_amount is mandatory for "export_holders action"'
-        _export_holders(args.api_url, proxy,
+        _export_holders(args.api_url,
                         args.token_identifier,
                         args.min_amount)
 
