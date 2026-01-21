@@ -1,7 +1,8 @@
 multiversx_sc::imports!();
 multiversx_sc::derive_imports!();
 
-#[derive(TopEncode, TopDecode, TypeAbi)]
+#[type_abi]
+#[derive(TopEncode, TopDecode)]
 pub struct TokenAndThreshold<M: ManagedTypeApi> {
     pub token: TokenIdentifier<M>,
     pub nonce: u64,

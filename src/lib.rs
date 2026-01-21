@@ -13,13 +13,15 @@ static ERR_NOT_IN_SNAPSHOT_PERIOD: &[u8] = b"Not in snapshot period";
 static ERR_NOT_IN_DISTRIUTION_PERIOD: &[u8] = b"Not in distribution period";
 static ERR_DISTRIBUTION_NOT_COMPLETE: &[u8] = b"Distribution is not complete";
 
-#[derive(TopEncode, TypeAbi)]
+#[type_abi]
+#[derive(TopEncode)]
 pub struct StakingState {
     current_round: u32,
     round_state: RoundState,
 }
 
-#[derive(PartialEq, NestedEncode, TopDecode, TopEncode, TypeAbi)]
+#[type_abi]
+#[derive(PartialEq, NestedEncode, TopDecode, TopEncode)]
 pub enum RoundState {
     HoldersSnapshot,
     RewardsDistribution,

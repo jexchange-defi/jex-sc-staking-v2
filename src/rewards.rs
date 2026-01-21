@@ -1,7 +1,8 @@
 multiversx_sc::imports!();
 multiversx_sc::derive_imports!();
 
-#[derive(Clone, ManagedVecItem, NestedEncode, TopEncode, TopDecode, TypeAbi)]
+#[type_abi]
+#[derive(Clone, ManagedVecItem, NestedEncode, TopEncode, TopDecode)]
 pub struct TokenAndBalance<M: ManagedTypeApi> {
     token: TokenIdentifier<M>,
     nonce: u64,

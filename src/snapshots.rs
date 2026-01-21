@@ -1,7 +1,8 @@
 multiversx_sc::imports!();
 multiversx_sc::derive_imports!();
 
-#[derive(TopEncode, TypeAbi)]
+#[type_abi]
+#[derive(TopEncode)]
 pub struct SharesOfAddress<M: ManagedTypeApi> {
     address_balance: BigUint<M>,
     total_balance: BigUint<M>,
