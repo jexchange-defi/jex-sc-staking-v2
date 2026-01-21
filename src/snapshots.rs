@@ -42,11 +42,7 @@ pub trait SnapshotsModule {
 
     #[view(getAllAddresses)]
     fn get_all_addresses(&self, from: usize, size: usize) -> MultiValueEncoded<ManagedAddress> {
-        let all_addresses = self.all_addresses();
-        let iter = all_addresses.iter().skip(from);
-        let addresses: ManagedVec<ManagedAddress> = iter.take(size).collect();
-        let result: MultiValueEncoded<ManagedAddress> = addresses.into();
-        result
+        self.all_addresses().iter().skip(from).take(size).collect()
     }
 
     #[storage_mapper("all_addresses")]
@@ -54,7 +50,7 @@ pub trait SnapshotsModule {
 
     #[view(getNbAddresses)]
     fn nb_addresses(&self) -> usize {
-        return self.all_addresses().len();
+        self.all_addresses().len()
     }
 
     #[storage_mapper("snap_bal")]
@@ -67,9 +63,10 @@ pub trait SnapshotsModule {
     #[view(getSharesOfAddress)]
     fn get_shares_of_address(&self, address: ManagedAddress) -> SharesOfAddress<Self::Api> {
         let balance = self.snapshot_address_balance(&address).get();
-        return SharesOfAddress::<Self::Api> {
+
+        SharesOfAddress::<Self::Api> {
             address_balance: balance,
             total_balance: self.snapshot_total_balance().get(),
-        };
+        }
     }
 }

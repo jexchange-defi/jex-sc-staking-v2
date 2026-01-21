@@ -12,7 +12,7 @@ pub trait SwapModule {
             0u64,
         );
 
-        // erd1qqqqqqqqqqqqqpgquenuwz852khuxcau49md27wk2qp03v4s6avsdvmxkc
+        // erd1qqqqqqqqqqqqqpgq7u4y0qle773mcelvnkapjv36pn2whzy36avs2qccja
         let swap_sc_address = ManagedAddress::from(hex!(
             "00000000000000000500f72a4783f9f7a3bc67ec9dba19323a0cd4eb8891d759"
         ));
