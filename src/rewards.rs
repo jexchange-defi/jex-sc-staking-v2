@@ -19,26 +19,36 @@ pub trait RewardsModule: crate::tokens::TokensModule + crate::snapshots::Snapsho
     // owner endpoints
 
     fn fund_rewards_internal(&self) {
+        let jex_id = TokenIdentifier::from_esdt_bytes(b"JEX-9040ca");
+
         let payments = &self.call_value().all_esdt_transfers();
         for payment in payments.iter() {
-            self.send().direct_esdt(
-                &self.treasury_address().get(),
-                &payment.token_identifier,
-                payment.token_nonce,
-                &(payment.amount.clone() * REWARD_TREASURY_PERCENT / 100u64),
-            );
+            let treasury_amount = payment.amount.clone() * REWARD_TREASURY_PERCENT / 100u64;
+            let receiver = if payment.token_identifier == jex_id {
+                self.burn_wallet().get()
+            } else {
+                self.treasury_address().get()
+            };
+
+            self.tx()
+                .to(receiver)
+                .with_esdt_transfer(EsdtTokenPayment::new(jex_id.clone(), 0u64, treasury_amount))
+                .transfer();
+
             self.send().direct_esdt(
                 &self.team_a_address().get(),
                 &payment.token_identifier,
                 payment.token_nonce,
                 &(payment.amount.clone() * REWARD_TEAM_A_PERCENT / 100u64),
             );
+
             self.send().direct_esdt(
                 &self.team_j_address().get(),
                 &payment.token_identifier,
                 payment.token_nonce,
                 &(payment.amount.clone() * REWARD_TEAM_J_PERCENT / 100u64),
             );
+
             self.send().direct_esdt(
                 &self.team_p_address().get(),
                 &payment.token_identifier,
@@ -136,6 +146,10 @@ pub trait RewardsModule: crate::tokens::TokensModule + crate::snapshots::Snapsho
     }
 
     // storage & views
+
+    #[view(getBurnWallet)]
+    #[storage_mapper("burn_wallet")]
+    fn burn_wallet(&self) -> SingleValueMapper<ManagedAddress>;
 
     #[view(getRewardsForRound)]
     #[storage_mapper("rewards_for_round")]

@@ -6,9 +6,9 @@
 
 // Init:                                 1
 // Upgrade:                              1
-// Endpoints:                           18
+// Endpoints:                           19
 // Async Callback (empty):               1
-// Total number of exported functions:  21
+// Total number of exported functions:  22
 
 #![no_std]
 
@@ -32,6 +32,7 @@ multiversx_sc_wasm_adapter::endpoints! {
         getCurrentRound => current_round
         getCurrentState => current_state
         getCurrentRoundRewards => get_current_round_rewards
+        getBurnWallet => burn_wallet
         getRewardsForRound => rewards_for_round
         getAllAddresses => get_all_addresses
         getNbAddresses => nb_addresses

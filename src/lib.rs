@@ -1,5 +1,7 @@
 #![no_std]
 
+use multiversx_sc::hex_literal::hex;
+
 mod jexchange_lps_sc_proxy;
 mod rewards;
 mod snapshots;
@@ -39,10 +41,19 @@ pub trait ScStaking:
         self.current_round().set_if_empty(1);
         self.current_state()
             .set_if_empty(RoundState::HoldersSnapshot);
+        // erd1rn79sxfs2ytqg60jy7mmu8gs37562ze7stm0tplrwglk7nnjm5uqzzmnc4
+        self.burn_wallet().set_if_empty(ManagedAddress::from(hex!(
+            "1cfc58193051160469f227b7be1d108fa9a50b3e82f6f587e3723f6f4e72dd38"
+        )));
     }
 
     #[upgrade]
-    fn upgrade(&self) {}
+    fn upgrade(&self) {
+        // erd1rn79sxfs2ytqg60jy7mmu8gs37562ze7stm0tplrwglk7nnjm5uqzzmnc4
+        self.burn_wallet().set_if_empty(ManagedAddress::from(hex!(
+            "1cfc58193051160469f227b7be1d108fa9a50b3e82f6f587e3723f6f4e72dd38"
+        )));
+    }
 
     // owner endpoints
 

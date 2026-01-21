@@ -31,6 +31,7 @@
           "balance": "0",
           "code": "file:../output/jex-sc-staking-v2.wasm",
           "storage": {
+            "str:burn_wallet": "0x1cfc58193051160469f227b7be1d108fa9a50b3e82f6f587e3723f6f4e72dd38",
             "str:current_round": "*",
             "str:snapshots_enabled": "*",
             "str:token_thresholds.len": "1",
