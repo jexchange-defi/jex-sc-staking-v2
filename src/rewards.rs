@@ -32,7 +32,11 @@ pub trait RewardsModule: crate::tokens::TokensModule + crate::snapshots::Snapsho
 
             self.tx()
                 .to(receiver)
-                .with_esdt_transfer(EsdtTokenPayment::new(jex_id.clone(), 0u64, treasury_amount))
+                .with_esdt_transfer(EsdtTokenPayment::new(
+                    payment.token_identifier.clone(),
+                    payment.token_nonce,
+                    treasury_amount,
+                ))
                 .transfer();
 
             self.send().direct_esdt(
