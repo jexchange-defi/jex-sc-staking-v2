@@ -106,7 +106,7 @@ pub trait ScStaking:
 
         self.fund_rewards_internal();
 
-        self.swap_wegld_to_jex();
+        self.swap_usdc_to_jex();
     }
 
     #[only_owner]
