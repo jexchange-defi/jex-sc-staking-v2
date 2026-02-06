@@ -106,7 +106,7 @@ pub trait ScStaking:
 
         self.fund_rewards_internal();
 
-        self.swap_wegld_to_jex();
+        self.swap_usdc_to_jex();
     }
 
     #[only_owner]
@@ -171,11 +171,10 @@ pub trait ScStaking:
     #[view(getState)]
     fn state(&self) -> StakingState {
         let round = self.current_round().get();
-        let state = StakingState {
+        StakingState {
             current_round: round,
             round_state: self.current_state().get(),
-        };
-        return state;
+        }
     }
 
     #[view(getCurrentRound)]
@@ -200,6 +199,6 @@ pub trait ScStaking:
             rewards_ = self.rewards_for_round(current_round).iter().collect();
         }
 
-        return rewards_.into();
+        rewards_.into()
     }
 }

@@ -4,21 +4,21 @@ multiversx_sc::imports!();
 
 #[multiversx_sc::module]
 pub trait SwapModule {
-    fn swap_wegld_to_jex(&self) {
-        let wegld_identifier = TokenIdentifier::from_esdt_bytes(b"WEGLD-bd4d79");
+    fn swap_usdc_to_jex(&self) {
+        let usdc_identifier = TokenIdentifier::from_esdt_bytes(b"USDC-c76f1f");
 
-        let wegld_balance = self.blockchain().get_sc_balance(
-            &EgldOrEsdtTokenIdentifier::esdt(wegld_identifier.clone()),
+        let usdc_balance = self.blockchain().get_sc_balance(
+            &EgldOrEsdtTokenIdentifier::esdt(usdc_identifier.clone()),
             0u64,
         );
 
-        if wegld_balance > 1 {
-            // erd1qqqqqqqqqqqqqpgq7u4y0qle773mcelvnkapjv36pn2whzy36avs2qccja
+        if usdc_balance > 1 {
+            // erd1qqqqqqqqqqqqqpgqxwl3zmftzrvkpphx4wx2z7mgl09ncgcl6avsnp4z0w
             let swap_sc_address = ManagedAddress::from(hex!(
-                "00000000000000000500f72a4783f9f7a3bc67ec9dba19323a0cd4eb8891d759"
+                "0000000000000000050033bf116d2b10d96086e6ab8ca17b68fbcb3c231fd759"
             ));
 
-            let payment = EsdtTokenPayment::new(wegld_identifier, 0u64, wegld_balance);
+            let payment = EsdtTokenPayment::new(usdc_identifier, 0u64, usdc_balance);
 
             self.jexchange_lps_sc_proxy(swap_sc_address)
                 .swap_tokens_fixed_input(BigUint::from(2u64))
