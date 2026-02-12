@@ -1,7 +1,7 @@
 import argparse
-import datetime
 import getpass
 import logging
+from datetime import UTC, datetime
 from itertools import chain, groupby
 from typing import Any, Mapping
 
@@ -88,11 +88,9 @@ def _parse_address_and_lock(hex_: str):
 def _fetch_token_prices() -> Mapping[str, float]:
     LOG.info('Fetching token prices')
 
-    api_key = input('Aggregator API key: ')
-
     url = 'https://agg-api.jexchange.io/tokens'
     LOG.debug(f'url={url}')
-    resp = requests.get(url, headers={'x-api-key': api_key})
+    resp = requests.get(url)
     assert resp.status_code == 200, 'Error fetching token prices'
 
     json_ = resp.json()
@@ -428,7 +426,7 @@ def _report_init():
         out.write("\n\n")
         out.write('---------------\n')
         out.write('Snapshot report\n')
-        out.write(f"{datetime.datetime.utcnow().isoformat()}\n")
+        out.write(f"{datetime.now(tz=UTC).isoformat()}\n")
         out.write('---------------\n')
         out.write("\n\n")
 
